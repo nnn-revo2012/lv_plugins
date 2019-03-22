@@ -73,7 +73,7 @@ namespace Plugin_LiveDe55 {
 
         public string Site       { get { return "livede55"; } }
 
-        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/03/22版)"; } }
+        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/03/23版)"; } }
 
         public string TopPageUrl { get { return "https://livede55.com/"; } }
 
@@ -260,7 +260,7 @@ namespace Plugin_LiveDe55 {
 
                         // DSの場合
                         if (item.Find("a", "class", "lady-main", true).Count > 0) {
-                            p.OtherInfo = Regex.Match(item.Find("a", "class", "lady-main", true)[0].GetAttributeValue("href"), "(ds[0-9]+)",  RegexOptions.Compiled).Groups[1].Value + " ";
+                            p.OtherInfo = Regex.Match(item.Find("a", "class", "lady-main", true)[0].GetAttributeValue("href"), "(ds/[0-9]+)",  RegexOptions.Compiled).Groups[1].Value + " ";
                         }
                         p.RoomName  = "DS";
 
@@ -345,8 +345,8 @@ namespace Plugin_LiveDe55 {
             //string sProfUrl = TopPageUrl + "performer/profile/p" + performer.ID;
             string sProfUrl = TopPageUrl + "chat/performer/" + performer.ID;
             if (performer.RoomName == "DS") {
-                string tmp1 = Regex.Match(performer.OtherInfo, "(ds[0-9]+)", RegexOptions.Compiled).Groups[1].Value;
-                if (tmp1 != "") sProfUrl = TopPageUrl + "performer/profile/" + tmp1;
+                string tmp1 = Regex.Match(performer.OtherInfo, "(ds/[0-9]+)", RegexOptions.Compiled).Groups[1].Value;
+                if (tmp1 != "") sProfUrl = TopPageUrl + "chat/" + tmp1;
             }
             return sProfUrl;
         }
