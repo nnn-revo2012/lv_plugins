@@ -73,7 +73,7 @@ namespace Plugin_LiveDe55 {
 
         public string Site       { get { return "livede55"; } }
 
-        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2017/12/14版)"; } }
+        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/03/22版)"; } }
 
         public string TopPageUrl { get { return "https://livede55.com/"; } }
 
@@ -201,12 +201,14 @@ namespace Plugin_LiveDe55 {
                         default: Log.Add(Site + " - " + p.Name, "不明な状態: " + item.GetAttributeValue("class"), LogColor.Error); break;
                     }
 
+                    /*
                     // メッセージ取得
                     if (item.Find("p", "class", "comment-wrap__txt", true).Count > 0) {
                         if (item.Find("p", "class", "comment-wrap__txt", true)[0].Items.Count > 0) {
                             p.OtherInfo += HttpUtilityEx.HtmlDecode(item.Find("p", "class", "comment-wrap__txt", true)[0].Items[0].Text);
                         }
                     }
+                    */
 
                     if (Pub.DebugMode == true )
                         if (pefs.Count < 1) Log.Add(Site, "pefs.Add OK", LogColor.Warning); //DEBUG

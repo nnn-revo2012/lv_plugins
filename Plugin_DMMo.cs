@@ -104,7 +104,7 @@ namespace Plugin_DMMo {
 
         public string Site       { get { return sRoomName[1]; } }
 
-        public string Caption    { get { return sRoomName[1]+"用のプラグイン(2017/02/24版)"; } }
+        public string Caption    { get { return sRoomName[1]+"用のプラグイン(2019/03/22版)"; } }
 
         public string TopPageUrl { get { return "http://www.dmm.co.jp/live/"+sRoomName[0]+"/"; } }
 
@@ -190,6 +190,7 @@ namespace Plugin_DMMo {
 
                 }
 
+                /*
                 //コメント取得
                 if (tagTop.Find("span", "class", "comment", true).Count > 0) {
                     tmp1 = tagTop.Find("span", "class", "comment", true)[0];
@@ -198,6 +199,7 @@ namespace Plugin_DMMo {
                         p.OtherInfo = Regex.Replace(p.OtherInfo, "[\x00-\x1f]", "", RegexOptions.Compiled); //エラーになるコードを削除
                     }
                 }
+                */
 
                 //人数の取得
                 if (tagTop.Find("span", "class", RegexGetView, true).Count > 0) {

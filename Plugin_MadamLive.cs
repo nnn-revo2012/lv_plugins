@@ -56,7 +56,7 @@ namespace Plugin_MadamLive {
 
         public string Site       { get { return "madamlive"; } }
 
-        public string Caption    { get { return "MadamLive用のプラグイン(2018/07/31版)"; } }
+        public string Caption    { get { return "MadamLive用のプラグイン(2019/03/22版)"; } }
 
         public string TopPageUrl { get { return "http://www.madamlive.tv/"; } }
 
@@ -192,7 +192,7 @@ namespace Plugin_MadamLive {
                     Log.Add(Site + "-ERROR", "人数 " + p.Name + ": sec_1=" + sSec ,LogColor.Error);
                 }
 
-                p.OtherInfo += HttpUtilityEx.HtmlDecode(jso.GetField("taiki_comment", BindingFlags.Default).GetValue(null) as string);
+                //p.OtherInfo += HttpUtilityEx.HtmlDecode(jso.GetField("taiki_comment", BindingFlags.Default).GetValue(null) as string);
 
                 if (Pub.DebugMode == true )
                     if (pefs.Count < 1) Log.Add(Site, "pefs.Add OK", LogColor.Warning); //DEBUG

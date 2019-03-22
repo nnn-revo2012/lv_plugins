@@ -41,7 +41,8 @@ namespace Plugin_Caribbeancomgirl {
                     string sMes = FlashGetVariable("chat_text.text");
                     if (sMes != null && sMes != "" && sMes != Message) {
                         Message = sMes;
-                        Log.AddMessage(Performer, sMes); //メッセージログ表示
+                        //Log.AddMessage(Performer, sMes); //メッセージログ表示
+                        Log.Add(Performer.Plugin.Site + " - " + Performer.Name, "≫" + sMes, LogColor.Pef_Message);
                     }
                 } catch {
                 }
@@ -67,7 +68,7 @@ namespace Plugin_Caribbeancomgirl {
 
         public string Site       { get { return "caribbeancomgirl"; } }
 
-        public string Caption    { get { return "カリビアンコムガール用のプラグイン(2017/11/11版)"; } }
+        public string Caption    { get { return "カリビアンコムガール用のプラグイン(2019/03/22版)"; } }
 
         public string TopPageUrl { get { return "http://www.caribbeancomgirl.com/"; } }
 
@@ -170,11 +171,13 @@ namespace Plugin_Caribbeancomgirl {
                     default: Log.Add(Site + " - " + p.Name, "不明な状態: " + item.GetAttributeValue("class"), LogColor.Error); break;
                 }
 
+                /*
                 //メッセージ取得　タグの中身があるかチェック
                 tmp1 = item.Find("div", "class", "pf_msg", true)[0];
                 if (tmp1.Items.Count > 0) {
                     p.OtherInfo += HttpUtilityEx.HtmlDecode(tmp1.Items[0].Text);
                 }
+                */
 
                 if (Pub.DebugMode == true )
                     if (pefs.Count < 1) Log.Add(Site, "pefs.Add OK", LogColor.Warning); //DEBUG

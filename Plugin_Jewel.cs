@@ -56,7 +56,7 @@ namespace Plugin_Jewel {
 
         public string Site       { get { return "Jewel"; } }
 
-        public string Caption    { get { return "Jewel用のプラグイン(2017/02/22版)"; } }
+        public string Caption    { get { return "Jewel用のプラグイン(2019/03/22版)"; } }
 
         public string TopPageUrl { get { return "http://www.j-live.tv/"; } }
 
@@ -191,7 +191,7 @@ namespace Plugin_Jewel {
                     Log.Add(Site + "-ERROR", "人数 " + p.Name + ": sec_1=" + sSec ,LogColor.Error);
                 }
 
-                p.OtherInfo += HttpUtilityEx.HtmlDecode(jso.GetField("taiki_comment", BindingFlags.Default).GetValue(null) as string);
+                //p.OtherInfo += HttpUtilityEx.HtmlDecode(jso.GetField("taiki_comment", BindingFlags.Default).GetValue(null) as string);
 
                 if (Pub.DebugMode == true )
                     if (pefs.Count < 1) Log.Add(Site, "pefs.Add OK", LogColor.Warning); //DEBUG

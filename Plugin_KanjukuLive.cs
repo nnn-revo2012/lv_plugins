@@ -41,7 +41,8 @@ namespace Plugin_KanjukuLive {
                     string sMes = FlashGetVariable("chat_text.text");
                     if (sMes != null && sMes != "" && sMes != Message) {
                         Message = sMes;
-                        Log.AddMessage(Performer, sMes); //メッセージログ表示
+                        //Log.AddMessage(Performer, sMes); //メッセージログ表示
+                        Log.Add(Performer.Plugin.Site + " - " + Performer.Name, "≫" + sMes, LogColor.Pef_Message);
                     }
                 } catch {
                 }
@@ -66,7 +67,7 @@ namespace Plugin_KanjukuLive {
 
         public string Site       { get { return "KanjukuLive"; } }
 
-        public string Caption    { get { return "感熟ライブ用のプラグイン(2016/10/05版)"; } }
+        public string Caption    { get { return "感熟ライブ用のプラグイン(2019/03/22版)"; } }
 
         public string TopPageUrl { get { return "http://www.kanjukulive.com/"; } }
 
@@ -149,11 +150,13 @@ namespace Plugin_KanjukuLive {
                     default: Log.Add(Site + " - " + p.Name, "不明な状態: " +  sStat, LogColor.Error); break;
                 }
 
+                /*
                 //メッセージ取得　タグの中身があるかチェック
                 tmp1 = item.Find("div", "class", "thumbComment", true)[0];
                 if (tmp1.Items.Count >= 2) {
                     p.OtherInfo += HttpUtilityEx.HtmlDecode(tmp1.Items[1].Text);
                 }
+                */
 
                 if (Pub.DebugMode == true )
                     if (pefs.Count < 1) Log.Add(Site, "pefs.Add OK", LogColor.Warning); //DEBUG

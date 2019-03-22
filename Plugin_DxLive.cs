@@ -41,7 +41,9 @@ namespace Plugin_DxLive {
                     string sMes = FlashGetVariable("chat_text.text");
                     if (sMes != null && sMes != "" && sMes != Message) {
                         Message = sMes;
-                        Log.AddMessage(Performer, sMes); //メッセージログ表示
+                        //Log.AddMessage(Performer, sMes); //メッセージログ表示
+                        Log.Add(Performer.Plugin.Site + " - " + Performer.Name, "≫" + sMes, LogColor.Pef_Message);
+
                     }
                 } catch {
                 }
@@ -66,7 +68,7 @@ namespace Plugin_DxLive {
 
         public string Site       { get { return "DXlive"; } }
 
-        public string Caption    { get { return "DXLive用のプラグイン(2015/11/28版)"; } }
+        public string Caption    { get { return "DXLive用のプラグイン(2019/03/22版)"; } }
 
         public string TopPageUrl { get { return "http://www.dxlive.com/"; } }
 
@@ -144,6 +146,7 @@ namespace Plugin_DxLive {
                     p.NewFace = true;
                 }
 
+                /*
                 //2012/01/06 メッセージ取得　タグの中身があるかチェック
                 tmp1 = item.Find("div", "id", "pftext", true)[0];
                 if (tmp1.Items.Count > 0) {
@@ -151,6 +154,7 @@ namespace Plugin_DxLive {
                         p.OtherInfo = HttpUtilityEx.HtmlDecode(tmp1.Items[0].Items[0].Text);
                     }
                 }
+                */
 
                 //ステータス 2014/06/13修正
                 string sStat = item.GetAttributeValue("class");

@@ -87,7 +87,7 @@ namespace Plugin_Madamu {
 
         public string Site       { get { return "Madamu"; } }
 
-        public string Caption    { get { return "マダムとおしゃべり館用のプラグイン(2017/02/22版)"; } }
+        public string Caption    { get { return "マダムとおしゃべり館用のプラグイン(2019/03/22版)"; } }
 
         public string TopPageUrl { get { return "http://www.madamu.tv/"; } }
 
@@ -182,10 +182,12 @@ namespace Plugin_Madamu {
                         if (sAge != "") p.Age = int.Parse(sAge);
                     }
 
+                    /*
                     HtmlItem tmp1 = item.Find("span", "class", "title", true)[0];
                     if (tmp1.Items.Count > 0) {
                         p.OtherInfo += HttpUtilityEx.HtmlDecode(tmp1.Items[0].Text);
                     }
+                    */
 
                     if (Pub.DebugMode == true )
                         if (pefs.Count < 1) Log.Add(Site, "pefs.Add OK", LogColor.Warning); //DEBUG
