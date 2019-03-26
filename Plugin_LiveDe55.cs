@@ -73,7 +73,7 @@ namespace Plugin_LiveDe55 {
 
         public string Site       { get { return "livede55"; } }
 
-        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/03/23版)"; } }
+        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/03/27版)"; } }
 
         public string TopPageUrl { get { return "https://livede55.com/"; } }
 
@@ -248,8 +248,8 @@ namespace Plugin_LiveDe55 {
                         p.ImageUrl = RegexGetDSImg.Match(sTmp).Groups[1].Value;
                         p.ImageUpdateCheck = false;
 
-                        if (item.Find("h3", "class", "lady-main__name", true).Count > 0) {
-                            if (item.Find("h3", "class", "lady-main__name", true)[0].TryGetSubItemText(out sTmp, 0)) {
+                        if (item2.Find("h3", "class", "lady-main__name", true).Count > 0) {
+                            if (item2.Find("h3", "class", "lady-main__name", true)[0].TryGetSubItemText(out sTmp, 0)) {
                                 p.Name = HttpUtilityEx.HtmlDecode(sTmp);
                             } else {
                                Log.Add(Site + " - " + sID, "名前なし", LogColor.Warning);
