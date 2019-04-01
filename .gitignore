@@ -245,5 +245,5 @@ ModelManifest.xml
 .fake/
 
 # 
-LVtool.exe
-LVtool.exe.config
+LVtool/LVtool.exe
+LVtool/LVtool.exe.config

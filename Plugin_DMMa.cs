@@ -89,24 +89,27 @@ namespace Plugin_DMMo {
                                                    "ajax-top-event/=/group=%%ROOMNAME%%/"};
 
 #if ACHA //アダルト
-        private string[] sRoomName = new string[] {"acha", "DMM(a)"};
+        private readonly string sRoomName = "acha";
 #elif MACHA //マダム
-        private string[] sRoomName = new string[] {"macha", "DMM(m)"};
+        private readonly string sRoomName = "macha";
 #elif WACHA //ワールド
-        private string[] sRoomName = new string[] {"wacha", "DMM(w)"};
+        private readonly string sRoomName = "wacha";
 #else //おしゃべり
-        private string[] sRoomName = new string[] {"ocha", "DMM(o)"};
+        private readonly string sRoomName = "ocha";
 #endif
         #endregion
 
 
         #region ■ISitePluginインターフェースの実装
 
-        public string Site       { get { return sRoomName[1]; } }
+#if FIX_IMPORT
+        public string Site       { get { return "DMM" + sRoomName[0]; } }
+#else
+        public string Site       { get { return "DMM(" + sRoomName[0] + ")"; } }
+#endif
+        public string Caption    { get { return Site + "用のプラグイン(2019/04/02版)"; } }
 
-        public string Caption    { get { return sRoomName[1]+"用のプラグイン(2019/03/22版)"; } }
-
-        public string TopPageUrl { get { return "http://www.dmm.co.jp/live/"+sRoomName[0]+"/"; } }
+        public string TopPageUrl { get { return "http://www.dmm.co.jp/live/"+sRoomName+"/"; } }
 
         public void Begin() {
             //プラグイン開始時処理
@@ -124,7 +127,7 @@ namespace Plugin_DMMo {
             List<HtmlItem> tagTops = new List<HtmlItem>();
             foreach (string sUrl in sUrlList) {
                 try {
-                    Uri ur = new Uri("http://www.dmm.co.jp/live/chat/-/online-list/"+ sUrl.Replace("%%ROOMNAME%%", sRoomName[0]));
+                    Uri ur = new Uri("http://www.dmm.co.jp/live/chat/-/online-list/"+ sUrl.Replace("%%ROOMNAME%%", sRoomName));
                     Parser.UserAgent = Pub.UserAgent + "_" + Site; //User-Agentを設定
                     Parser.LoadHtml(ur, "UTF-8");
                     Parser.ParseTree();
