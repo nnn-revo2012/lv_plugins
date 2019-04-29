@@ -13,6 +13,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Reflection;
 using System.CodeDom.Compiler;
+using System.Globalization;
 using LiveViewer;
 using LiveViewer.Tool;
 using LiveViewer.HtmlParser;
@@ -64,6 +65,30 @@ namespace Plugin_DMMo {
             }
         }
 
+        //サロペートペア＆結合文字 検出＆文字除去
+        //\ud83d\ude0a
+        //か\u3099
+        private class HttpUtilityEx2 {
+            public static string HtmlDecode(string s) {
+                if (!IsSurrogatePair(s)) return HttpUtilityEx.HtmlDecode(s);
+
+                StringBuilder sb = new StringBuilder();
+                TextElementEnumerator tee = StringInfo.GetTextElementEnumerator(s);
+                tee.Reset();
+                while (tee.MoveNext()) {
+                    string te = tee.GetTextElement();
+                    if (1 < te.Length) continue; //サロペートペアまたは結合文字
+                    sb.Append(te);
+                }
+                return HttpUtilityEx.HtmlDecode(sb.ToString());
+            }
+
+            public static bool IsSurrogatePair(string s) {
+                StringInfo si = new StringInfo(s);
+                return si.LengthInTextElements < s.Length;
+            }
+        }
+
         #endregion
 
         #region ■オブジェクト
@@ -107,9 +132,9 @@ namespace Plugin_DMMo {
 #else
         public string Site       { get { return "DMM(" + sRoomName[0] + ")"; } }
 #endif
-        public string Caption    { get { return Site + "用のプラグイン(2019/04/02版)"; } }
+        public string Caption    { get { return Site + "用のプラグイン(2019/04/30版)"; } }
 
-        public string TopPageUrl { get { return "http://www.dmm.co.jp/live/"+sRoomName+"/"; } }
+        public string TopPageUrl { get { return "https://www.dmm.co.jp/live/chat/"; } }
 
         public void Begin() {
             //プラグイン開始時処理
@@ -127,7 +152,7 @@ namespace Plugin_DMMo {
             List<HtmlItem> tagTops = new List<HtmlItem>();
             foreach (string sUrl in sUrlList) {
                 try {
-                    Uri ur = new Uri("http://www.dmm.co.jp/live/chat/-/online-list/"+ sUrl.Replace("%%ROOMNAME%%", sRoomName));
+                    Uri ur = new Uri(TopPageUrl + "-/online-list/"+ sUrl.Replace("%%ROOMNAME%%", sRoomName));
                     Parser.UserAgent = Pub.UserAgent + "_" + Site; //User-Agentを設定
                     Parser.LoadHtml(ur, "UTF-8");
                     Parser.ParseTree();
@@ -157,7 +182,7 @@ namespace Plugin_DMMo {
 
                 //名前の取得
                 HtmlItem tmp1 = tagTop.Find("span", "class", "name", true)[0];
-                p.Name = HttpUtilityEx.HtmlDecode(tmp1.Items[0].Text);
+                p.Name = HttpUtilityEx2.HtmlDecode(tmp1.Items[0].Text);
 
                 //状態の取得
                 string sStat = null;
@@ -193,16 +218,15 @@ namespace Plugin_DMMo {
 
                 }
 
+#if !NOCOMMENT
                 //コメント取得
-                /*
                 if (tagTop.Find("span", "class", "comment", true).Count > 0) {
                     tmp1 = tagTop.Find("span", "class", "comment", true)[0];
                     if (tmp1.Items.Count > 0) {
-                        p.OtherInfo = HttpUtilityEx.HtmlDecode(tmp1.Items[0].Text);
-                        p.OtherInfo = Regex.Replace(p.OtherInfo, "[\x00-\x1f]", "", RegexOptions.Compiled); //エラーになるコードを削除
+                        p.OtherInfo = HttpUtilityEx2.HtmlDecode(tmp1.Items[0].Text);
                     }
                 }
-                */
+#endif
 
                 //人数の取得
                 if (tagTop.Find("span", "class", RegexGetView, true).Count > 0) {
@@ -253,10 +277,10 @@ namespace Plugin_DMMo {
                 using (WebClient wc = new WebClient()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
                     wc.Encoding = System.Text.Encoding.UTF8;
-                    string sDlUrl = "http://www.dmm.co.jp/live/chat/-/chat_room/=/character_id=" + performer.ID + "/";
+                    string sDlUrl = TopPageUrl + "-/chat_room/=/character_id=" + performer.ID + "/";
                     if (performer.RoomName == "event" && performer.OtherInfo != null) //イベントでイベントIDがある場合
                         if (RegexGetEv.IsMatch(performer.OtherInfo) == true)
-                            sDlUrl = "http://www.dmm.co.jp/live/chat/-/event_room/=/character_id=" + performer.ID + "/" + performer.OtherInfo + "/";
+                            sDlUrl = TopPageUrl + "-/event_room/=/character_id=" + performer.ID + "/" + performer.OtherInfo + "/";
                     string sHtml = wc.DownloadString(sDlUrl);
                     if (RegexGetSwf1.Match(sHtml).Groups[1].Value != null) {
                         UTFstr utfstr1 = new UTFstr(RegexGetSwf1.Match(sHtml).Groups[1].Value);
@@ -298,10 +322,10 @@ namespace Plugin_DMMo {
 
         public string GetProfileUrl(Performer performer) {
             //プロフィールURLを返す
-            string sPUrl = "http://www.dmm.co.jp/live/chat/-/chat_room/=/character_id=" + performer.ID + "/";
+            string sPUrl = TopPageUrl + "-/chat_room/=/character_id=" + performer.ID + "/";
             if (performer.RoomName == "event" && performer.OtherInfo != null) //イベントでイベントIDがある場合
                 if (RegexGetEv.IsMatch(performer.OtherInfo) == true)
-                   sPUrl = "http://www.dmm.co.jp/live/chat/-/event_room/=/character_id=" + performer.ID + "/" + performer.OtherInfo + "/";
+                   sPUrl = TopPageUrl + "-/event_room/=/character_id=" + performer.ID + "/" + performer.OtherInfo + "/";
 
             if (Pub.DebugMode == true)
                 if (performer.RoomName == "event") Log.Add(Site + " - " + performer.Name, sPUrl, LogColor.Warning); //DEBUG

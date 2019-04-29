@@ -11,6 +11,7 @@ using System.Reflection;
 using System.CodeDom.Compiler;
 using Microsoft.JScript;
 using System.Collections.Specialized;
+using System.Globalization;
 using LiveViewer;
 using LiveViewer.Tool;
 using LiveViewer.HtmlParser;
@@ -38,20 +39,44 @@ namespace Plugin_LiveDe55 {
             }
         }
 
+        //サロペートペア＆結合文字 検出＆文字除去
+        //\ud83d\ude0a
+        //か\u3099
+        private class HttpUtilityEx2 {
+            public static string HtmlDecode(string s) {
+                if (!IsSurrogatePair(s)) return HttpUtilityEx.HtmlDecode(s);
+
+                StringBuilder sb = new StringBuilder();
+                TextElementEnumerator tee = StringInfo.GetTextElementEnumerator(s);
+                tee.Reset();
+                while (tee.MoveNext()) {
+                    string te = tee.GetTextElement();
+                    if (1 < te.Length) continue; //サロペートペアまたは結合文字
+                    sb.Append(te);
+                }
+                return HttpUtilityEx.HtmlDecode(sb.ToString());
+            }
+
+            public static bool IsSurrogatePair(string s) {
+                StringInfo si = new StringInfo(s);
+                return si.LengthInTextElements < s.Length;
+            }
+        }
+
         #endregion
 
 
         #region ■オブジェクト
         Parser Parser = new Parser();    //HTML解析用パーサ
 
-        private Regex RegexGetStatus   = new Regex("^lady +", RegexOptions.Compiled); //Status取得用
-        private Regex RegexGetID       = new Regex("/([0-9]+)$", RegexOptions.Compiled); //パフォID取得用
-        private Regex RegexGetAge      = new Regex("([0-9]+)歳", RegexOptions.Compiled); //年齢取得用
-        private Regex RegexGetDSPef    = new Regex("^lady-main-ds +list__item +", RegexOptions.Compiled); //DSパフォデータ取得用
-        private Regex RegexGetDSID     = new Regex("p[0-9]*-([0-9]+)", RegexOptions.Compiled); //DSパフォID取得用
-        private Regex RegexGetDSImg    = new Regex("background-image:url\\(([^\\)]*)\\)", RegexOptions.Compiled); //DSパフォIMG取得用
-        private Regex RegexGetSwf1     = new Regex("embed[ \\t\\n]+src[ \\t\\n]*=[ \\t\\n]*\"([^\"]*)\"", RegexOptions.Compiled); //Swf表示用1
-        private Regex RegexGetSwf2     = new Regex("flashvars[ \\t\\n]*=[ \\t\\n]*\"([^\"]*)\"", RegexOptions.Compiled); //Swf表示用2
+        private readonly Regex RegexGetStatus   = new Regex("^lady +", RegexOptions.Compiled); //Status取得用
+        private readonly Regex RegexGetID       = new Regex("/([0-9]+)$", RegexOptions.Compiled); //パフォID取得用
+        private readonly Regex RegexGetAge      = new Regex("([0-9]+)歳", RegexOptions.Compiled); //年齢取得用
+        private readonly Regex RegexGetDSPef    = new Regex("^lady-main-ds +list__item +", RegexOptions.Compiled); //DSパフォデータ取得用
+        private readonly Regex RegexGetDSID     = new Regex("p[0-9]*-([0-9]+)", RegexOptions.Compiled); //DSパフォID取得用
+        private readonly Regex RegexGetDSImg    = new Regex("background-image:url\\(([^\\)]*)\\)", RegexOptions.Compiled); //DSパフォIMG取得用
+        private readonly Regex RegexGetSwf1     = new Regex("embed[ \\t\\n]+src[ \\t\\n]*=[ \\t\\n]*\"([^\"]*)\"", RegexOptions.Compiled); //Swf表示用1
+        private readonly Regex RegexGetSwf2     = new Regex("flashvars[ \\t\\n]*=[ \\t\\n]*\"([^\"]*)\"", RegexOptions.Compiled); //Swf表示用2
 
         private Type   JsExecuterType   = null;
         private object JsExecuterObject = null;
@@ -73,7 +98,7 @@ namespace Plugin_LiveDe55 {
 
         public string Site       { get { return "livede55"; } }
 
-        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/03/27版)"; } }
+        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/04/30版)"; } }
 
         public string TopPageUrl { get { return "https://livede55.com/"; } }
 
@@ -152,9 +177,9 @@ namespace Plugin_LiveDe55 {
 
                     if (item.Find("h3", "class", "lady-main__name", true).Count > 0) {
                         if (item.Find("h3", "class", "lady-main__name", true)[0].TryGetSubItemText(out sTmp, 0)) {
-                            p.Name = HttpUtilityEx.HtmlDecode(sTmp);
+                            p.Name = HttpUtilityEx2.HtmlDecode(sTmp);
                         } else {
-                           Log.Add(Site + " - " + sID, "名前なし", LogColor.Warning);
+                            Log.Add(Site + " - " + sID, "名前なし", LogColor.Warning);
                         }
                     } else {
                         Log.Add(Site + " - " + sID, "名前なし", LogColor.Warning);
@@ -201,14 +226,20 @@ namespace Plugin_LiveDe55 {
                         default: Log.Add(Site + " - " + p.Name, "不明な状態: " + item.GetAttributeValue("class"), LogColor.Error); break;
                     }
 
-                    /*
+#if !NOCOMMENT
                     // メッセージ取得
                     if (item.Find("p", "class", "comment-wrap__txt", true).Count > 0) {
                         if (item.Find("p", "class", "comment-wrap__txt", true)[0].Items.Count > 0) {
-                            p.OtherInfo += HttpUtilityEx.HtmlDecode(item.Find("p", "class", "comment-wrap__txt", true)[0].Items[0].Text);
+                            string ttt = item.Find("p", "class", "comment-wrap__txt", true)[0].Items[0].Text;
+                            //ttt += "\ud83d\ude0a";
+                            if (HttpUtilityEx2.IsSurrogatePair(ttt)) {
+                                Log.Add(Site + " - " + p.Name, "サロゲートペア文字あり", LogColor.Warning);
+                            }
+                            p.OtherInfo += HttpUtilityEx2.HtmlDecode(ttt);
+                            //p.OtherInfo += HttpUtilityEx2.HtmlDecode(item.Find("p", "class", "comment-wrap__txt", true)[0].Items[0].Text);
                         }
                     }
-                    */
+#endif
 
                     if (Pub.DebugMode == true )
                         if (pefs.Count < 1) Log.Add(Site, "pefs.Add OK", LogColor.Warning); //DEBUG
@@ -250,9 +281,9 @@ namespace Plugin_LiveDe55 {
 
                         if (item2.Find("h3", "class", "lady-main__name", true).Count > 0) {
                             if (item2.Find("h3", "class", "lady-main__name", true)[0].TryGetSubItemText(out sTmp, 0)) {
-                                p.Name = HttpUtilityEx.HtmlDecode(sTmp);
+                                p.Name = HttpUtilityEx2.HtmlDecode(sTmp);
                             } else {
-                               Log.Add(Site + " - " + sID, "名前なし", LogColor.Warning);
+                                Log.Add(Site + " - " + sID, "名前なし", LogColor.Warning);
                             }
                         } else {
                             Log.Add(Site + " - " + sID, "名前なし", LogColor.Warning);
@@ -314,9 +345,9 @@ namespace Plugin_LiveDe55 {
                     if (RegexGetSwf1.Match(sHtml).Groups[1].Value != null) {
                         sFlash = RegexGetSwf1.Match(sHtml).Groups[1].Value;
                         if (sFlash.IndexOf('?') >= 0) {
-                            sFlash += "&" + HttpUtilityEx.HtmlDecode(RegexGetSwf2.Match(sHtml).Groups[1].Value);
+                            sFlash += "&" + HttpUtilityEx2.HtmlDecode(RegexGetSwf2.Match(sHtml).Groups[1].Value);
                         } else {
-                            sFlash += "?" + HttpUtilityEx.HtmlDecode(RegexGetSwf2.Match(sHtml).Groups[1].Value);
+                            sFlash += "?" + HttpUtilityEx2.HtmlDecode(RegexGetSwf2.Match(sHtml).Groups[1].Value);
                         }
                     }
                     Pub.WebRequestCount++; //GUIの読込回数を増やす
