@@ -232,11 +232,10 @@ namespace Plugin_LiveDe55 {
                         if (item.Find("p", "class", "comment-wrap__txt", true)[0].Items.Count > 0) {
                             string ttt = item.Find("p", "class", "comment-wrap__txt", true)[0].Items[0].Text;
                             //ttt += "\ud83d\ude0a";
-                            if (HttpUtilityEx2.IsSurrogatePair(ttt)) {
-                                Log.Add(Site + " - " + p.Name, "サロゲートペア文字あり", LogColor.Warning);
-                            }
+                            if (Pub.DebugMode)
+                                if (HttpUtilityEx2.IsSurrogatePair(ttt))
+                                    Log.Add(Site + " - " + p.Name, "サロゲートペア文字あり", LogColor.Warning);
                             p.OtherInfo += HttpUtilityEx2.HtmlDecode(ttt);
-                            //p.OtherInfo += HttpUtilityEx2.HtmlDecode(item.Find("p", "class", "comment-wrap__txt", true)[0].Items[0].Text);
                         }
                     }
 #endif

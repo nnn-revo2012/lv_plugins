@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Net;
 using System.IO;
 using System.Diagnostics;
+using System.Globalization;
 using LiveViewer;
 using LiveViewer.Tool;
 using LiveViewer.HtmlParser;
@@ -50,6 +51,30 @@ namespace Plugin_DxLive {
             }
         }
 
+        //サロペートペア＆結合文字 検出＆文字除去
+        //\ud83d\ude0a
+        //か\u3099
+        private class HttpUtilityEx2 {
+            public static string HtmlDecode(string s) {
+                if (!IsSurrogatePair(s)) return HttpUtilityEx.HtmlDecode(s);
+
+                StringBuilder sb = new StringBuilder();
+                TextElementEnumerator tee = StringInfo.GetTextElementEnumerator(s);
+                tee.Reset();
+                while (tee.MoveNext()) {
+                    string te = tee.GetTextElement();
+                    if (1 < te.Length) continue; //サロペートペアまたは結合文字
+                    sb.Append(te);
+                }
+                return HttpUtilityEx.HtmlDecode(sb.ToString());
+            }
+
+            public static bool IsSurrogatePair(string s) {
+                StringInfo si = new StringInfo(s);
+                return si.LengthInTextElements < s.Length;
+            }
+        }
+
         #endregion
 
 
@@ -68,9 +93,9 @@ namespace Plugin_DxLive {
 
         public string Site       { get { return "DXlive"; } }
 
-        public string Caption    { get { return "DXLive用のプラグイン(2019/03/22版)"; } }
+        public string Caption    { get { return "DXLive用のプラグイン(2019/04/30版)"; } }
 
-        public string TopPageUrl { get { return "http://www.dxlive.com/"; } }
+        public string TopPageUrl { get { return "https://www.dxlive.com/"; } }
 
         public void Begin() {
             //プラグイン開始時処理
@@ -126,7 +151,7 @@ namespace Plugin_DxLive {
 
                 Performer p = new Performer(this, sID);
                 p.Name = sID;
-                p.ImageUrl = "http://imageup.dxlive.com/WebArchive/" + p.Name + "/live/LinkedImage.jpg";
+                p.ImageUrl = "https://imageup.dxlive.com/WebArchive/" + p.Name + "/live/LinkedImage.jpg";
                 p.ImageUpdateCheck = false;
 
                 // 人数 2014/06/28修正
@@ -146,15 +171,20 @@ namespace Plugin_DxLive {
                     p.NewFace = true;
                 }
 
-                /*
+#if !NOCOMMENT
                 //2012/01/06 メッセージ取得　タグの中身があるかチェック
                 tmp1 = item.Find("div", "id", "pftext", true)[0];
                 if (tmp1.Items.Count > 0) {
                     if (tmp1.Items[0].Items.Count > 0) {
-                        p.OtherInfo = HttpUtilityEx.HtmlDecode(tmp1.Items[0].Items[0].Text);
+                        string ttt = tmp1.Items[0].Items[0].Text;
+                        //ttt += "\ud83d\ude0a";
+                        if (Pub.DebugMode)
+                            if (HttpUtilityEx2.IsSurrogatePair(ttt))
+                                Log.Add(Site + " - " + p.Name, "サロゲートペア文字あり", LogColor.Warning);
+                        p.OtherInfo += HttpUtilityEx2.HtmlDecode(ttt);
                     }
                 }
-                */
+#endif
 
                 //ステータス 2014/06/13修正
                 string sStat = item.GetAttributeValue("class");

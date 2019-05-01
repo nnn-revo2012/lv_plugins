@@ -223,7 +223,11 @@ namespace Plugin_DMMo {
                 if (tagTop.Find("span", "class", "comment", true).Count > 0) {
                     tmp1 = tagTop.Find("span", "class", "comment", true)[0];
                     if (tmp1.Items.Count > 0) {
-                        p.OtherInfo = HttpUtilityEx2.HtmlDecode(tmp1.Items[0].Text);
+                        string ttt = tmp1.Items[0].Text;
+                        if (Pub.DebugMode)
+                            if (HttpUtilityEx2.IsSurrogatePair(ttt))
+                                Log.Add(Site + " - " + p.Name, "サロゲートペア文字あり", LogColor.Warning);
+                        p.OtherInfo += HttpUtilityEx2.HtmlDecode(ttt);
                     }
                 }
 #endif
