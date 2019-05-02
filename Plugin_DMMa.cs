@@ -37,6 +37,9 @@ namespace Plugin_DMMo {
         private class FormFlashDMM : FormFlash {
             public FormFlashDMM(Performer pef)
                 : base(pef) {
+                this.ClientSize = new Size(640, 480);
+                this.FormBorderStyle = FormBorderStyle.FixedSingle; //固定サイズ
+                //this.SizeChanged += FormFlashDMM_SizeChanged;
             }
         }
 
@@ -311,6 +314,8 @@ namespace Plugin_DMMo {
         }
 
         public Clipping GetFlashClipping(Performer performer) {
+            return null;
+            /*
             //Flashの切り抜き方法を返す 2017/02/24修正
             Clipping c = new Clipping();
             c.OriginalSize.Width  = 768;  //フラッシュ全体の幅
@@ -322,6 +327,7 @@ namespace Plugin_DMMo {
             c.Fixed = true;               //Flashが固定サイズ
 
             return c;
+            */
         }
 
         public string GetProfileUrl(Performer performer) {
