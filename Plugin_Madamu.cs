@@ -11,6 +11,7 @@ using System.Reflection;
 using System.CodeDom.Compiler;
 using Microsoft.JScript;
 using System.Collections.Specialized;
+using System.Globalization;
 using LiveViewer;
 using LiveViewer.Tool;
 using LiveViewer.HtmlParser;
@@ -52,6 +53,30 @@ namespace Plugin_Madamu {
             }
         }
 
+        //サロペートペア＆結合文字 検出＆文字除去
+        //\ud83d\ude0a
+        //か\u3099
+        private class HttpUtilityEx2 {
+            public static string HtmlDecode(string s) {
+                if (!IsSurrogatePair(s)) return HttpUtilityEx.HtmlDecode(s);
+
+                StringBuilder sb = new StringBuilder();
+                TextElementEnumerator tee = StringInfo.GetTextElementEnumerator(s);
+                tee.Reset();
+                while (tee.MoveNext()) {
+                    string te = tee.GetTextElement();
+                    if (1 < te.Length) continue; //サロペートペアまたは結合文字
+                    sb.Append(te);
+                }
+                return HttpUtilityEx.HtmlDecode(sb.ToString());
+            }
+
+            public static bool IsSurrogatePair(string s) {
+                StringInfo si = new StringInfo(s);
+                return si.LengthInTextElements < s.Length;
+            }
+        }
+
         #endregion
 
         #region ■オブジェクト
@@ -87,9 +112,9 @@ namespace Plugin_Madamu {
 
         public string Site       { get { return "Madamu"; } }
 
-        public string Caption    { get { return "マダムとおしゃべり館用のプラグイン(2019/03/22版)"; } }
+        public string Caption    { get { return "マダムとおしゃべり館用のプラグイン(2019/05/03版)"; } }
 
-        public string TopPageUrl { get { return "http://www.madamu.tv/"; } }
+        public string TopPageUrl { get { return "https://www.madamu.tv/"; } }
 
         public void Begin() {
             //プラグイン開始時処理
@@ -156,7 +181,7 @@ namespace Plugin_Madamu {
                         if (pefs.Count < 1) Log.Add(Site, "ID OK", LogColor.Warning); //DEBUG
 
                     Performer p = new Performer(this, sID);
-                    p.Name = RegexGetName.Replace(item.Find("p", "class", "hundle", true)[0].Items[0].Text, "$1");
+                    p.Name = HttpUtilityEx2.HtmlDecode(RegexGetName.Replace(item.Find("p", "class", "hundle", true)[0].Items[0].Text, "$1"));
                     //p.ImageUrl = TopPageUrl + RegexGetImg.Match(item.Find("div", "style", true)[0].GetAttributeValue("style")).Groups[1].Value;
                     //p.ImageUpdateCheck = false;
 
@@ -182,12 +207,16 @@ namespace Plugin_Madamu {
                         if (sAge != "") p.Age = int.Parse(sAge);
                     }
 
-                    /*
+#if !NOCOMMENT
                     HtmlItem tmp1 = item.Find("span", "class", "title", true)[0];
                     if (tmp1.Items.Count > 0) {
-                        p.OtherInfo += HttpUtilityEx.HtmlDecode(tmp1.Items[0].Text);
+                        string ttt = tmp1.Items[0].Text;
+                        if (Pub.DebugMode)
+                            if (HttpUtilityEx2.IsSurrogatePair(ttt))
+                                Log.Add(Site + " - " + p.Name, "サロゲートペア文字あり", LogColor.Warning);
+                        p.OtherInfo += HttpUtilityEx2.HtmlDecode(ttt);
                     }
-                    */
+#endif
 
                     if (Pub.DebugMode == true )
                         if (pefs.Count < 1) Log.Add(Site, "pefs.Add OK", LogColor.Warning); //DEBUG

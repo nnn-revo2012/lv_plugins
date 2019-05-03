@@ -93,7 +93,7 @@ namespace Plugin_DxLive {
 
         public string Site       { get { return "DXlive"; } }
 
-        public string Caption    { get { return "DXLive用のプラグイン(2019/04/30版)"; } }
+        public string Caption    { get { return "DXLive用のプラグイン(2019/05/03版)"; } }
 
         public string TopPageUrl { get { return "https://www.dxlive.com/"; } }
 
@@ -177,7 +177,6 @@ namespace Plugin_DxLive {
                 if (tmp1.Items.Count > 0) {
                     if (tmp1.Items[0].Items.Count > 0) {
                         string ttt = tmp1.Items[0].Items[0].Text;
-                        //ttt += "\ud83d\ude0a";
                         if (Pub.DebugMode)
                             if (HttpUtilityEx2.IsSurrogatePair(ttt))
                                 Log.Add(Site + " - " + p.Name, "サロゲートペア文字あり", LogColor.Warning);

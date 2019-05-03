@@ -98,7 +98,7 @@ namespace Plugin_LiveDe55 {
 
         public string Site       { get { return "livede55"; } }
 
-        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/04/30版)"; } }
+        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/05/03版)"; } }
 
         public string TopPageUrl { get { return "https://livede55.com/"; } }
 

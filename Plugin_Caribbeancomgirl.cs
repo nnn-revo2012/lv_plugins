@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Net;
 using System.IO;
 using System.Diagnostics;
+using System.Globalization;
 using LiveViewer;
 using LiveViewer.Tool;
 using LiveViewer.HtmlParser;
@@ -49,6 +50,30 @@ namespace Plugin_Caribbeancomgirl {
             }
         }
 
+        //サロペートペア＆結合文字 検出＆文字除去
+        //\ud83d\ude0a
+        //か\u3099
+        private class HttpUtilityEx2 {
+            public static string HtmlDecode(string s) {
+                if (!IsSurrogatePair(s)) return HttpUtilityEx.HtmlDecode(s);
+
+                StringBuilder sb = new StringBuilder();
+                TextElementEnumerator tee = StringInfo.GetTextElementEnumerator(s);
+                tee.Reset();
+                while (tee.MoveNext()) {
+                    string te = tee.GetTextElement();
+                    if (1 < te.Length) continue; //サロペートペアまたは結合文字
+                    sb.Append(te);
+                }
+                return HttpUtilityEx.HtmlDecode(sb.ToString());
+            }
+
+            public static bool IsSurrogatePair(string s) {
+                StringInfo si = new StringInfo(s);
+                return si.LengthInTextElements < s.Length;
+            }
+        }
+
         #endregion
 
 
@@ -68,9 +93,9 @@ namespace Plugin_Caribbeancomgirl {
 
         public string Site       { get { return "caribbeancomgirl"; } }
 
-        public string Caption    { get { return "カリビアンコムガール用のプラグイン(2019/03/22版)"; } }
+        public string Caption    { get { return "カリビアンコムガール用のプラグイン(2019/05/03版)"; } }
 
-        public string TopPageUrl { get { return "http://www.caribbeancomgirl.com/"; } }
+        public string TopPageUrl { get { return "https://www.caribbeancomgirl.com/"; } }
 
         public void Begin() {
             //プラグイン開始時処理
@@ -128,7 +153,7 @@ namespace Plugin_Caribbeancomgirl {
 
                 Performer p = new Performer(this, sID);
                 p.Name = sID;
-                p.ImageUrl = "http://imageup.dxlive.com/WebArchive/" + p.Name + "/live/LinkedImage.jpg";
+                p.ImageUrl = "https://imageup.dxlive.com/WebArchive/" + p.Name + "/live/LinkedImage.jpg";
                 p.ImageUpdateCheck = false;
 
                 // 人数
@@ -171,13 +196,17 @@ namespace Plugin_Caribbeancomgirl {
                     default: Log.Add(Site + " - " + p.Name, "不明な状態: " + item.GetAttributeValue("class"), LogColor.Error); break;
                 }
 
-                /*
+#if !NOCOMMENT
                 //メッセージ取得　タグの中身があるかチェック
                 tmp1 = item.Find("div", "class", "pf_msg", true)[0];
                 if (tmp1.Items.Count > 0) {
-                    p.OtherInfo += HttpUtilityEx.HtmlDecode(tmp1.Items[0].Text);
+                    string ttt = tmp1.Items[0].Text;
+                    if (Pub.DebugMode)
+                        if (HttpUtilityEx2.IsSurrogatePair(ttt))
+                            Log.Add(Site + " - " + p.Name, "サロゲートペア文字あり", LogColor.Warning);
+                    p.OtherInfo += HttpUtilityEx2.HtmlDecode(ttt);
                 }
-                */
+#endif
 
                 if (Pub.DebugMode == true )
                     if (pefs.Count < 1) Log.Add(Site, "pefs.Add OK", LogColor.Warning); //DEBUG

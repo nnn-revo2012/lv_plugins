@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.CodeDom.Compiler;
 using Microsoft.JScript;
+using System.Globalization;
 using LiveViewer;
 using LiveViewer.Tool;
 using LiveViewer.HtmlParser;
@@ -21,6 +22,30 @@ namespace Plugin_MadamLive {
         private class FormFlashMadamLive : FormFlash {
             public FormFlashMadamLive(Performer pef)
                 : base(pef) {
+            }
+        }
+
+        //サロペートペア＆結合文字 検出＆文字除去
+        //\ud83d\ude0a
+        //か\u3099
+        private class HttpUtilityEx2 {
+            public static string HtmlDecode(string s) {
+                if (!IsSurrogatePair(s)) return HttpUtilityEx.HtmlDecode(s);
+
+                StringBuilder sb = new StringBuilder();
+                TextElementEnumerator tee = StringInfo.GetTextElementEnumerator(s);
+                tee.Reset();
+                while (tee.MoveNext()) {
+                    string te = tee.GetTextElement();
+                    if (1 < te.Length) continue; //サロペートペアまたは結合文字
+                    sb.Append(te);
+                }
+                return HttpUtilityEx.HtmlDecode(sb.ToString());
+            }
+
+            public static bool IsSurrogatePair(string s) {
+                StringInfo si = new StringInfo(s);
+                return si.LengthInTextElements < s.Length;
             }
         }
 
@@ -56,9 +81,9 @@ namespace Plugin_MadamLive {
 
         public string Site       { get { return "madamlive"; } }
 
-        public string Caption    { get { return "MadamLive用のプラグイン(2019/03/22版)"; } }
+        public string Caption    { get { return "MadamLive用のプラグイン(2019/05/03版)"; } }
 
-        public string TopPageUrl { get { return "http://www.madamlive.tv/"; } }
+        public string TopPageUrl { get { return "https://www.madamlive.tv/"; } }
 
         public void Begin() {
             //プラグイン開始時処理
@@ -98,7 +123,7 @@ namespace Plugin_MadamLive {
                 sb.Append("(");
                 Client.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site); //User-Agentを設定
                 using (Stream       s  = Client.OpenRead(TopPageUrl + "ajax/new_online_girls_ajax.php?"))
-                using (StreamReader sr = new StreamReader(s, Encoding.GetEncoding("EUC-JP"))) {
+                using (StreamReader sr = new StreamReader(s, Encoding.GetEncoding("UTF-8"))) {
                     sb.Append(sr.ReadToEnd());
                 }
                 sb.Append(");");
@@ -138,7 +163,7 @@ namespace Plugin_MadamLive {
                 if (Pub.DebugMode == true )
                     if (pefs.Count < 1) Log.Add(Site, "ID OK", LogColor.Warning); //DEBUG
                 Performer p   = new Performer(this, sID);
-                p.Name        = HttpUtilityEx.HtmlDecode(jso.GetField("nick_name", BindingFlags.Default).GetValue(null) as string);
+                p.Name        = HttpUtilityEx2.HtmlDecode(jso.GetField("nick_name", BindingFlags.Default).GetValue(null) as string);
                 string sImg = jso.GetField("img", BindingFlags.Default).GetValue(null) as string;
                 p.ImageUrl = sImg.Replace("/girl_img/", "/girl_img/120x90/"); //2015/05/20
                 p.ImageUpdateCheck = false;
@@ -192,7 +217,13 @@ namespace Plugin_MadamLive {
                     Log.Add(Site + "-ERROR", "人数 " + p.Name + ": sec_1=" + sSec ,LogColor.Error);
                 }
 
-                //p.OtherInfo += HttpUtilityEx.HtmlDecode(jso.GetField("taiki_comment", BindingFlags.Default).GetValue(null) as string);
+#if !NOCOMMENT
+                string ttt = jso.GetField("taiki_comment", BindingFlags.Default).GetValue(null) as string;
+                if (Pub.DebugMode)
+                    if (HttpUtilityEx2.IsSurrogatePair(ttt))
+                        Log.Add(Site + " - " + p.Name, "サロゲートペア文字あり", LogColor.Warning);
+                p.OtherInfo += HttpUtilityEx2.HtmlDecode(ttt);
+#endif
 
                 if (Pub.DebugMode == true )
                     if (pefs.Count < 1) Log.Add(Site, "pefs.Add OK", LogColor.Warning); //DEBUG

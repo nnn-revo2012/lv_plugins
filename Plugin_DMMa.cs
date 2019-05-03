@@ -135,7 +135,7 @@ namespace Plugin_DMMo {
 #else
         public string Site       { get { return "DMM(" + sRoomName[0] + ")"; } }
 #endif
-        public string Caption    { get { return Site + "用のプラグイン(2019/04/30版)"; } }
+        public string Caption    { get { return Site + "用のプラグイン(2019/05/030版)"; } }
 
         public string TopPageUrl { get { return "https://www.dmm.co.jp/live/chat/"; } }
 
