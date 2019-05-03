@@ -83,7 +83,7 @@ namespace Plugin_AngelLive {
 
         public string Site       { get { return "AngelLive"; } }
 
-        public string Caption    { get { return "AngelLive用のプラグイン(2019/03/22版)"; } }
+        public string Caption    { get { return "AngelLive用のプラグイン(2019/05/03版)"; } }
 
         public string TopPageUrl { get { return "https://www.angel-live.com/"; } }
 
@@ -179,6 +179,7 @@ namespace Plugin_AngelLive {
                         case "9": p.RoomName = "ｲﾍﾞﾝﾄ"; break;
                         case "10": p.RoomName = "ｲﾍﾞﾝﾄ"; break;
                         case "11": p.RoomName = "ｲﾍﾞﾝﾄ"; break;
+                        case "97": p.RoomName = "ｶｯﾌﾟﾙ"; break;
                         case "99": p.OtherInfo = "[管理]"; break;
                         //default:   p.OtherInfo = "[？：" + sOption + "]"; break;
                         default: break;
@@ -200,8 +201,9 @@ namespace Plugin_AngelLive {
                     p.Age = (int)jso.GetField("age", BindingFlags.Default).GetValue(null);
 
                     p.DonaCount = (int)jso.GetField("cnt", BindingFlags.Default).GetValue(null);
-                    //p.OtherInfo += HttpUtilityEx.HtmlDecode(jso.GetField("cha", BindingFlags.Default).GetValue(null) as string);
-
+#if !NOCOMMENT
+                    p.OtherInfo += HttpUtilityEx.HtmlDecode(jso.GetField("cha", BindingFlags.Default).GetValue(null) as string);
+#endif
                     if (Pub.DebugMode == true )
                         if (pefs.Count < 1) Log.Add(Site, "pefs.Add OK", LogColor.Warning); //DEBUG
 

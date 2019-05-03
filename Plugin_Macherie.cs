@@ -87,9 +87,9 @@ namespace Plugin_Macherie {
 
         public string Site       { get { return "macherie"; } }
 
-        public string Caption    { get { return "マシェリ用のプラグイン(2015/09/30版)"; } }
+        public string Caption    { get { return "マシェリ用のプラグイン(2019/05/03版)"; } }
 
-        public string TopPageUrl { get { return "http://macherie.tv/"; } }
+        public string TopPageUrl { get { return "https://macherie.tv/"; } }
 
         public void Begin() {
             //プラグイン開始時処理
@@ -128,7 +128,7 @@ namespace Plugin_Macherie {
                 StringBuilder sb = new StringBuilder();
                 sb.Append("(");
                 Client.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site); //User-Agentを設定
-                using (Stream       s  = Client.OpenRead(TopPageUrl + "xxnode.php"))
+                using (Stream       s  = Client.OpenRead("http://macherie.tv/xxnode.php"))
                 using (StreamReader sr = new StreamReader(s, Encoding.GetEncoding("Shift_JIS"))) {
                     sb.Append(sr.ReadToEnd());
                 }
@@ -238,8 +238,8 @@ namespace Plugin_Macherie {
             try {
                 using (WebClient wc = new WebClient()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
-                    string sHtml = wc.DownloadString(TopPageUrl + "chat/shicho.php?id=" + performer.ID);
-                    sFlash = TopPageUrl + RegexGetSwf.Match(sHtml).Groups[1].Value;
+                    string sHtml = wc.DownloadString("http://macherie.tv/chat/shicho.php?id=" + performer.ID);
+                    sFlash = "http://macherie.tv/" + RegexGetSwf.Match(sHtml).Groups[1].Value;
                     Pub.WebRequestCount++; //GUIの読込回数を増やす
                 }
             } catch (Exception ex) {
