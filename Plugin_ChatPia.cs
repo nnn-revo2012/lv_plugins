@@ -81,7 +81,7 @@ namespace Plugin_ChatPia {
 
         public string Site       { get { return "ChatPia"; } }
 
-        public string Caption    { get { return "CHATPIA用のプラグイン(2019/05/03版)"; } }
+        public string Caption    { get { return "CHATPIA用のプラグイン(2019/05/04版)"; } }
 
         public string TopPageUrl { get { return "https://www.chatpia.jp/"; } }
 
@@ -171,18 +171,11 @@ namespace Plugin_ChatPia {
                     p.Age = (int)jso.GetField("age", BindingFlags.Default).GetValue(null);
                     string sOption = jso.GetField("op1", BindingFlags.Default).GetValue(null) as string;
                     if (sOption == "99") continue;
-                    switch (sOption) {
-                        case "7": p.RoomName = "ｲﾍﾞﾝﾄ"; break;
-                        case "9": p.RoomName = "ｲﾍﾞﾝﾄ"; break;
-                        case "10": p.RoomName = "ｲﾍﾞﾝﾄ"; break;
-                        case "11": p.RoomName = "ｲﾍﾞﾝﾄ"; break;
-                        case "12": p.RoomName = "ｲﾍﾞﾝﾄ"; break;
-                        case "99999": p.OtherInfo = "[管理]"; break;
-                        //default:   p.OtherInfo = "[？：" + sOption + "]"; break;
-                        default: break;
-                    }
+                    else if (sOption == "99999") p.OtherInfo = "[管理]";
+                    else if (int.Parse(sOption) >= 7) p.RoomName = "ｲﾍﾞﾝﾄ";
+
                     if (Pub.DebugMode == true)
-                        if (sOption != "2" && sOption != "13") Log.Add(Site + " - " + p.Name, "op1: " + sOption, LogColor.Warning); //DEBUG
+                        if (sOption != "2") Log.Add(Site + " - " + p.Name, "op1: " + sOption, LogColor.Warning); //DEBUG
 
                     //color01: 超新人
                     string sOpt9  = jso.GetField("op9", BindingFlags.Default).GetValue(null) as string;
