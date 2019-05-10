@@ -83,7 +83,7 @@ namespace Plugin_AngelLive {
 
         public string Site       { get { return "AngelLive"; } }
 
-        public string Caption    { get { return "AngelLive用のプラグイン(2019/05/04版)"; } }
+        public string Caption    { get { return "AngelLive用のプラグイン(2019/05/10版)"; } }
 
         public string TopPageUrl { get { return "https://www.angel-live.com/"; } }
 
@@ -173,10 +173,12 @@ namespace Plugin_AngelLive {
                     }
 
                     string sOption = jso.GetField("op1", BindingFlags.Default).GetValue(null) as string;
-                    if (sOption == "99")  p.OtherInfo = "[管理]";
-                    else if (sOption =="97") p.RoomName = "ｶｯﾌﾟﾙ";
-                    else if (int.Parse(sOption) >= 6) p.RoomName = "ｲﾍﾞﾝﾄ";
-
+                    int iOp1;
+                    if (int.TryParse(sOption, out iOp1)) {
+                        if (iOp1 == 99)  p.OtherInfo = "[管理]";
+                        else if (iOp1 == 97) p.RoomName = "ｶｯﾌﾟﾙ";
+                        else if (iOp1 >= 6) p.RoomName = "ｲﾍﾞﾝﾄ";
+                    }
                     if (Pub.DebugMode == true)
                         if (sOption != "2") Log.Add(Site + " - " + p.Name, "op1: " + sOption, LogColor.Warning); //DEBUG
 
