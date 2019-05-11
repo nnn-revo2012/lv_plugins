@@ -135,7 +135,7 @@ namespace Plugin_DMMo {
 #else
         public string Site       { get { return "DMM(" + sRoomName[0] + ")"; } }
 #endif
-        public string Caption    { get { return Site + "用のプラグイン(2019/05/03版)"; } }
+        public string Caption    { get { return Site + "用のプラグイン(2019/05/11版)"; } }
 
         public string TopPageUrl { get { return "https://www.dmm.co.jp/live/chat/"; } }
 
@@ -285,14 +285,13 @@ namespace Plugin_DMMo {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
                     wc.Encoding = System.Text.Encoding.UTF8;
                     string sDlUrl = TopPageUrl + "-/chat_room/=/character_id=" + performer.ID + "/";
-                    if (performer.RoomName == "event" && performer.OtherInfo != null) //イベントでイベントIDがある場合
-                        if (RegexGetEv.IsMatch(performer.OtherInfo) == true)
-                            sDlUrl = TopPageUrl + "-/event_room/=/character_id=" + performer.ID + "/" + performer.OtherInfo + "/";
+                    if (performer.RoomName == "event" && RegexGetEv.IsMatch(performer.OtherInfo)) //イベントでイベントIDがある場合
+                        sDlUrl = TopPageUrl + "-/event_room/=/character_id=" + performer.ID + "/" + performer.OtherInfo + "/";
                     string sHtml = wc.DownloadString(sDlUrl);
                     if (RegexGetSwf1.Match(sHtml).Groups[1].Value != null) {
                         UTFstr utfstr1 = new UTFstr(RegexGetSwf1.Match(sHtml).Groups[1].Value);
                         UTFstr utfstr2 = new UTFstr(RegexGetSwf2.Match(sHtml).Groups[1].Value);
-                        if (performer.RoomName == "event") {
+                        if (performer.RoomName == "event" && RegexGetEv.IsMatch(performer.OtherInfo)) {
                             sFlash = utfstr2.Decode() + "event_peep" + ".swf"
                                    + "?" + RegexGetSwf5.Match(sHtml).Groups[1].Value
                                    + "&" + utfstr1.Decode();
@@ -333,9 +332,8 @@ namespace Plugin_DMMo {
         public string GetProfileUrl(Performer performer) {
             //プロフィールURLを返す
             string sPUrl = TopPageUrl + "-/chat_room/=/character_id=" + performer.ID + "/";
-            if (performer.RoomName == "event" && performer.OtherInfo != null) //イベントでイベントIDがある場合
-                if (RegexGetEv.IsMatch(performer.OtherInfo) == true)
-                   sPUrl = TopPageUrl + "-/event_room/=/character_id=" + performer.ID + "/" + performer.OtherInfo + "/";
+            if (performer.RoomName == "event" && RegexGetEv.IsMatch(performer.OtherInfo)) //イベントでイベントIDがある場合
+                sPUrl = TopPageUrl + "-/event_room/=/character_id=" + performer.ID + "/" + performer.OtherInfo + "/";
 
             if (Pub.DebugMode == true)
                 if (performer.RoomName == "event") Log.Add(Site + " - " + performer.Name, sPUrl, LogColor.Warning); //DEBUG
