@@ -98,7 +98,7 @@ namespace Plugin_LiveDe55 {
 
         public string Site       { get { return "livede55"; } }
 
-        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/05/03版)"; } }
+        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/10/09版)"; } }
 
         public string TopPageUrl { get { return "https://livede55.com/"; } }
 
@@ -329,7 +329,10 @@ namespace Plugin_LiveDe55 {
 
         public FormFlash OpenFlash(Performer performer) {
             //フラッシュ窓を返す
-            return new FormFlashLiveDe55(performer);
+            if (performer.RoomName == "DS")
+                return null;
+            else
+                return new FormFlashLiveDe55(performer);
         }
 
         public string GetFlashUrl(Performer performer) {
