@@ -12,6 +12,8 @@ using System.CodeDom.Compiler;
 using Microsoft.JScript;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Collections.Specialized;
+using System.Globalization;
 using LiveViewer;
 using LiveViewer.Tool;
 using LiveViewer.HtmlParser;
@@ -58,6 +60,30 @@ namespace Plugin_AngelLive {
             }
         }
 
+        //サロペートペア＆結合文字 検出＆文字除去
+        //\ud83d\ude0a
+        //か\u3099
+        private class HttpUtilityEx2 {
+            public static string HtmlDecode(string s) {
+                if (!IsSurrogatePair(s)) return HttpUtilityEx.HtmlDecode(s);
+
+                StringBuilder sb = new StringBuilder();
+                TextElementEnumerator tee = StringInfo.GetTextElementEnumerator(s);
+                tee.Reset();
+                while (tee.MoveNext()) {
+                    string te = tee.GetTextElement();
+                    if (1 < te.Length) continue; //サロペートペアまたは結合文字
+                    sb.Append(te);
+                }
+                return HttpUtilityEx.HtmlDecode(sb.ToString());
+            }
+
+            public static bool IsSurrogatePair(string s) {
+                StringInfo si = new StringInfo(s);
+                return si.LengthInTextElements < s.Length;
+            }
+        }
+
         #endregion
 
 
@@ -83,7 +109,7 @@ namespace Plugin_AngelLive {
 
         public string Site       { get { return "AngelLive"; } }
 
-        public string Caption    { get { return "AngelLive用のプラグイン(2019/05/10版)"; } }
+        public string Caption    { get { return "AngelLive用のプラグイン(2019/10/09版)"; } }
 
         public string TopPageUrl { get { return "https://www.angel-live.com/"; } }
 
@@ -124,11 +150,8 @@ namespace Plugin_AngelLive {
                 sb.Append("(");
                 using (WebClient wc = new WebClient()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site); //User-Agentを設定
-                    //using (Stream s = wc.OpenRead("https://assets-livechat.angel-live.com/lib/=/load_online.js"))
-                    using (Stream s = wc.OpenRead("http://livechat.angel-live.com/lib/=/load_online.js"))
-                    using (StreamReader sr = new StreamReader(s, Encoding.GetEncoding("EUC-JP"))) {
-                        sb.Append(sr.ReadToEnd());
-                    }
+                    wc.Encoding = Encoding.GetEncoding("EUC-JP");
+                    sb.Append(wc.DownloadString("http://livechat.angel-live.com/lib/=/load_online.js"));
                 }
                 sb.Append(");");
                 sb.Replace("\r\n", "");
@@ -143,7 +166,7 @@ namespace Plugin_AngelLive {
                 sb.Replace("';complete(req);", "");
 
                 //Jsファイルの内容を実行する
-                JSObject    top = JsExecuterType.InvokeMember("Eval", BindingFlags.InvokeMethod, null, JsExecuterObject, new object[] { sb.ToString() }) as JSObject;
+                JSObject top = JsExecuterType.InvokeMember("Eval", BindingFlags.InvokeMethod, null, JsExecuterObject, new object[] { sb.ToString() }) as JSObject;
                 ArrayObject obj = top.GetField("performers", BindingFlags.Default).GetValue(null) as ArrayObject;
 
                 if (Pub.DebugMode == true ) Log.Add(Site, "obj.length: " + obj.length, LogColor.Warning); //DEBUG
@@ -153,7 +176,7 @@ namespace Plugin_AngelLive {
                     if (Pub.DebugMode == true )
                         if (pefs.Count < 1) Log.Add(Site, "ID OK", LogColor.Warning); //DEBUG
                     Performer p = new Performer(this, sID);
-                    p.Name      = HttpUtilityEx.HtmlDecode(jso.GetField("nam", BindingFlags.Default).GetValue(null) as string);
+                    p.Name      = HttpUtilityEx2.HtmlDecode(jso.GetField("nam", BindingFlags.Default).GetValue(null) as string);
                     p.ImageUrl  = "http://picture.angel-live.com/images/p2-" + sID;
                     p.ImageUpdateCheck = false;
 
@@ -197,7 +220,11 @@ namespace Plugin_AngelLive {
 
                     p.DonaCount = (int)jso.GetField("cnt", BindingFlags.Default).GetValue(null);
 #if !NOCOMMENT
-                    p.OtherInfo += HttpUtilityEx.HtmlDecode(jso.GetField("cha", BindingFlags.Default).GetValue(null) as string);
+                    string ttt = jso.GetField("cha", BindingFlags.Default).GetValue(null) as string;
+                    if (Pub.DebugMode)
+                        if (HttpUtilityEx2.IsSurrogatePair(ttt))
+                            Log.Add(Site + " - " + p.Name, "サロゲートペア文字あり", LogColor.Warning);
+                    p.OtherInfo += HttpUtilityEx2.HtmlDecode(ttt);
 #endif
                     if (Pub.DebugMode == true )
                         if (pefs.Count < 1) Log.Add(Site, "pefs.Add OK", LogColor.Warning); //DEBUG

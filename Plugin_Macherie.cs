@@ -12,6 +12,8 @@ using System.Diagnostics;
 using System.Reflection;
 using System.CodeDom.Compiler;
 using Microsoft.JScript;
+using System.Collections.Specialized;
+using System.Globalization;
 using LiveViewer;
 using LiveViewer.Tool;
 using LiveViewer.HtmlParser;
@@ -44,7 +46,6 @@ namespace Plugin_Macherie {
                 //メッセージ取得
                 try {
                     string sMes = FlashGetVariable("main_mc.girl_msg1.text");
-                    sMes = Regex.Replace(sMes, "[\x00-\x1f]", "", RegexOptions.Compiled); //エラーになるコードを削除
                     if (sMes != null && sMes != "" && sMes != Message) {
                         Message = sMes;
                         //Log.AddMessage(Performer, sMes); //メッセージログ表示
@@ -55,12 +56,34 @@ namespace Plugin_Macherie {
             }
         }
 
+        //サロペートペア＆結合文字 検出＆文字除去
+        //\ud83d\ude0a
+        //か\u3099
+        private class HttpUtilityEx2 {
+            public static string HtmlDecode(string s) {
+                if (!IsSurrogatePair(s)) return HttpUtilityEx.HtmlDecode(s);
+
+                StringBuilder sb = new StringBuilder();
+                TextElementEnumerator tee = StringInfo.GetTextElementEnumerator(s);
+                tee.Reset();
+                while (tee.MoveNext()) {
+                    string te = tee.GetTextElement();
+                    if (1 < te.Length) continue; //サロペートペアまたは結合文字
+                    sb.Append(te);
+                }
+                return HttpUtilityEx.HtmlDecode(sb.ToString());
+            }
+
+            public static bool IsSurrogatePair(string s) {
+                StringInfo si = new StringInfo(s);
+                return si.LengthInTextElements < s.Length;
+            }
+        }
+
         #endregion
 
 
         #region ■オブジェクト
-
-        private WebClient Client       = new WebClient(); //HTML取得用
 
         private string[] xxNode = new string[]{"eventNode", "partyNode", "firstNode", "secondNode"};
 
@@ -87,7 +110,7 @@ namespace Plugin_Macherie {
 
         public string Site       { get { return "macherie"; } }
 
-        public string Caption    { get { return "マシェリ用のプラグイン(2019/05/03版)"; } }
+        public string Caption    { get { return "マシェリ用のプラグイン(2019/10/09版)"; } }
 
         public string TopPageUrl { get { return "https://macherie.tv/"; } }
 
@@ -125,18 +148,16 @@ namespace Plugin_Macherie {
 
             try {
                 //WebからJsファイルを読み取る
-                StringBuilder sb = new StringBuilder();
-                sb.Append("(");
-                Client.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site); //User-Agentを設定
-                using (Stream       s  = Client.OpenRead("http://macherie.tv/xxnode.php"))
-                using (StreamReader sr = new StreamReader(s, Encoding.GetEncoding("Shift_JIS"))) {
-                    sb.Append(sr.ReadToEnd());
+                string resData = string.Empty;
+                using (WebClient wc = new WebClient()) {
+                    wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site); //User-Agentを設定
+                    wc.Encoding = Encoding.GetEncoding("Shift_JIS");
+                    resData = wc.DownloadString("http://macherie.tv/xxnode.php");
                 }
-                sb.Append(");");
-                sb.Replace("\r\n", "");
+                resData = "(" + resData.Replace("\r\n", "") + ");";
 
                 //Jsファイルの内容を実行する
-                JSObject top = JsExecuterType.InvokeMember("Eval", BindingFlags.InvokeMethod, null, JsExecuterObject, new object[] { sb.ToString() }) as JSObject;
+                JSObject top = JsExecuterType.InvokeMember("Eval", BindingFlags.InvokeMethod, null, JsExecuterObject, new object[] { resData }) as JSObject;
 
                 //ノード毎にデーターを読み込む
                 foreach (string sNode in xxNode) {
@@ -160,7 +181,7 @@ namespace Plugin_Macherie {
             foreach (JSObject jso in jso2) {
                 string sID = jso.GetField("hs", BindingFlags.Default).GetValue(null) as string;
                 Performer p = new Performer(this, sID);
-                p.Name = jso.GetField("cn", BindingFlags.Default).GetValue(null) as string;
+                p.Name = HttpUtilityEx2.HtmlDecode(jso.GetField("cn", BindingFlags.Default).GetValue(null) as string);
 
                 //ステータスの取得
                 string sStatus = jso.GetField("st", BindingFlags.Default).GetValue(null) as string;
