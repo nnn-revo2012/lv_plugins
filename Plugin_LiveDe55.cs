@@ -98,7 +98,7 @@ namespace Plugin_LiveDe55 {
 
         public string Site       { get { return "livede55"; } }
 
-        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/10/09版)"; } }
+        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/10/15版)"; } }
 
         public string TopPageUrl { get { return "https://livede55.com/"; } }
 
@@ -136,6 +136,7 @@ namespace Plugin_LiveDe55 {
 
             try {
                 //データー取得
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
                 using (WebClientEx Client = new WebClientEx()) {
                     //WebからJSONデータを取得する(GET)
                     Client.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
@@ -339,6 +340,7 @@ namespace Plugin_LiveDe55 {
             //FlashのURLを返す・・待機画像ページのHTMLから取得する
             string sFlash = null;
             try {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
                 using (WebClientEx wc = new WebClientEx()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
                     wc.Headers.Add("Accept-Language","ja,en-US;q=0.8,en;q=0.6");
