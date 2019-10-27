@@ -110,9 +110,9 @@ namespace Plugin_Macherie {
 
         public string Site       { get { return "macherie"; } }
 
-        public string Caption    { get { return "マシェリ用のプラグイン(2019/10/09版)"; } }
+        public string Caption    { get { return "マシェリ用のプラグイン(2019/10/27版)"; } }
 
-        public string TopPageUrl { get { return "https://macherie.tv/"; } }
+        public string TopPageUrl { get { return "https://www.macherie.tv/"; } }
 
         public void Begin() {
             //プラグイン開始時処理
@@ -149,16 +149,16 @@ namespace Plugin_Macherie {
             try {
                 //WebからJsファイルを読み取る
                 string resData = string.Empty;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
                 using (WebClient wc = new WebClient()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site); //User-Agentを設定
                     wc.Encoding = Encoding.GetEncoding("Shift_JIS");
-                    resData = wc.DownloadString("http://macherie.tv/xxnode.php");
+                    resData = wc.DownloadString(TopPageUrl + "xxnode-neo.php");
                 }
                 resData = "(" + resData.Replace("\r\n", "") + ");";
 
                 //Jsファイルの内容を実行する
                 JSObject top = JsExecuterType.InvokeMember("Eval", BindingFlags.InvokeMethod, null, JsExecuterObject, new object[] { resData }) as JSObject;
-
                 //ノード毎にデーターを読み込む
                 foreach (string sNode in xxNode) {
                     if (top.GetField(sNode, BindingFlags.Default).GetValue(null) as string == "notNode") continue;
@@ -229,9 +229,9 @@ namespace Plugin_Macherie {
                 //画像URLの取得
                 string sCs = jso.GetField("cs", BindingFlags.Default).GetValue(null) as string;
                 if (sCs != "cm") {
-                    p.ImageUrl = "http://p.macherie.tv/imgs/op/180x135/"; // 2014/08/20大きさ修正
+                    p.ImageUrl = "https://p.macherie.tv/imgs/op/180x135/"; // 2014/08/20大きさ修正
                 } else {
-                    p.ImageUrl = "http://p.macherie.tv/imgs/cm/180x135/"; // 2014/08/20大きさ修正
+                    p.ImageUrl = "https://p.macherie.tv/imgs/cm/180x135/"; // 2014/08/20大きさ修正
                 }
                 p.ImageUrl += jso.GetField("ph", BindingFlags.Default).GetValue(null) as string;
                 p.ImageUpdateCheck = false;
@@ -257,10 +257,12 @@ namespace Plugin_Macherie {
             //FlashのURLを返す・・待機画像ページのHTMLから取得する
             string sFlash = null;
             try {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
                 using (WebClient wc = new WebClient()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
-                    string sHtml = wc.DownloadString("http://macherie.tv/chat/shicho.php?id=" + performer.ID);
-                    sFlash = "http://macherie.tv/" + RegexGetSwf.Match(sHtml).Groups[1].Value;
+                    wc.Encoding = Encoding.GetEncoding("Shift_JIS");
+                    string sHtml = wc.DownloadString(TopPageUrl + "chat/shicho.php?id=" + performer.ID);
+                    sFlash = TopPageUrl + RegexGetSwf.Match(sHtml).Groups[1].Value;
                     Pub.WebRequestCount++; //GUIの読込回数を増やす
                 }
             } catch (Exception ex) {
