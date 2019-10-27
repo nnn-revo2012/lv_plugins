@@ -37,9 +37,13 @@ namespace Plugin_DMMo {
         private class FormFlashDMM : FormFlash {
             public FormFlashDMM(Performer pef)
                 : base(pef) {
+            }
+
+            protected override void OnSizeChanged(EventArgs e) {
                 this.ClientSize = new Size(640, 480);
-                this.FormBorderStyle = FormBorderStyle.FixedSingle; //固定サイズ
-                //this.SizeChanged += FormFlashDMM_SizeChanged;
+                this.MaximumSize = this.Size;
+                this.MinimumSize = this.Size;
+                base.OnSizeChanged(e);
             }
         }
 
@@ -135,7 +139,7 @@ namespace Plugin_DMMo {
 #else
         public string Site       { get { return "DMM(" + sRoomName[0] + ")"; } }
 #endif
-        public string Caption    { get { return Site + "用のプラグイン(2019/05/11版)"; } }
+        public string Caption    { get { return Site + "用のプラグイン(2019/10/27版)"; } }
 
         public string TopPageUrl { get { return "https://www.dmm.co.jp/live/chat/"; } }
 
@@ -155,10 +159,14 @@ namespace Plugin_DMMo {
             List<HtmlItem> tagTops = new List<HtmlItem>();
             foreach (string sUrl in sUrlList) {
                 try {
-                    Uri ur = new Uri(TopPageUrl + "-/online-list/"+ sUrl.Replace("%%ROOMNAME%%", sRoomName));
-                    Parser.UserAgent = Pub.UserAgent + "_" + Site; //User-Agentを設定
-                    Parser.LoadHtml(ur, "UTF-8");
-                    Parser.ParseTree();
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
+                    using (WebClient wc = new WebClient()) {
+                        wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
+                        wc.Encoding = Encoding.UTF8;
+                        string resData = wc.DownloadString(TopPageUrl + "-/online-list/"+ sUrl.Replace("%%ROOMNAME%%", sRoomName));
+                        Parser.LoadHtml(resData);
+                        Parser.ParseTree();
+                    }
                     Pub.WebRequestCount++;
                 } catch (Exception ex) {
                     //読み込み失敗
@@ -281,6 +289,7 @@ namespace Plugin_DMMo {
             //FlashのURLを返す・・待機画像ページのHTMLから取得する
             string sFlash = null;
             try {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
                 using (WebClient wc = new WebClient()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
                     wc.Encoding = System.Text.Encoding.UTF8;
