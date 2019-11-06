@@ -40,9 +40,11 @@ namespace Plugin_DMMo {
             }
 
             protected override void OnSizeChanged(EventArgs e) {
-                this.ClientSize = new Size(640, 480);
-                this.MaximumSize = this.Size;
-                this.MinimumSize = this.Size;
+                if (IsFormFixedSize) {
+                    this.ClientSize = new Size(640, 480);
+                    this.MaximumSize = this.Size;
+                    this.MinimumSize = this.Size;
+                }
                 base.OnSizeChanged(e);
             }
         }
@@ -120,6 +122,10 @@ namespace Plugin_DMMo {
         private string[] sUrlList  = new string[] {"ajax-refresh/=/group=%%ROOMNAME%%/sort=rand/type=all/",
                                                    "ajax-top-event/=/group=%%ROOMNAME%%/"};
 
+        private readonly string SFile = "DMM_FixSize.txt";
+        private static bool IsFormFixedSize = false;
+
+
 #if ACHA //アダルト
         private readonly string sRoomName = "acha";
 #elif MACHA //マダム
@@ -139,12 +145,23 @@ namespace Plugin_DMMo {
 #else
         public string Site       { get { return "DMM(" + sRoomName[0] + ")"; } }
 #endif
-        public string Caption    { get { return Site + "用のプラグイン(2019/10/27版)"; } }
+        public string Caption    { get { return Site + "用のプラグイン(2019/11/06版)"; } }
 
         public string TopPageUrl { get { return "https://www.dmm.co.jp/live/chat/"; } }
 
         public void Begin() {
             //プラグイン開始時処理
+
+            //DMM_FixSize.txt 読み込み処理
+            if (File.Exists(SFile)) {
+                using (StreamReader sr = new StreamReader(SFile)) {
+                    string line;
+                    while ((line = sr.ReadLine()) != null) { // 1行ずつ読み出し。
+                        if (line.StartsWith("#")) continue;
+                        if (line == "1") IsFormFixedSize = true;
+                    }
+                }
+            }
         }
 
         public void End() {
@@ -322,8 +339,7 @@ namespace Plugin_DMMo {
         }
 
         public Clipping GetFlashClipping(Performer performer) {
-            return null;
-            /*
+            if (IsFormFixedSize) return null;
             //Flashの切り抜き方法を返す 2017/02/24修正
             Clipping c = new Clipping();
             c.OriginalSize.Width  = 768;  //フラッシュ全体の幅
@@ -335,7 +351,7 @@ namespace Plugin_DMMo {
             c.Fixed = true;               //Flashが固定サイズ
 
             return c;
-            */
+
         }
 
         public string GetProfileUrl(Performer performer) {
