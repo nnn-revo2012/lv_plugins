@@ -110,7 +110,7 @@ namespace Plugin_Macherie {
 
         public string Site       { get { return "macherie"; } }
 
-        public string Caption    { get { return "マシェリ用のプラグイン(2019/10/27版)"; } }
+        public string Caption    { get { return "マシェリ用のプラグイン(2019/11/06版)"; } }
 
         public string TopPageUrl { get { return "https://www.macherie.tv/"; } }
 
@@ -196,6 +196,7 @@ namespace Plugin_Macherie {
                     //case "mbh"  : continue; //モバイルなので登録しない
 #endif
                     //case "cmh"  : continue; //CM(?)なので登録しない
+                    case "machi2h": p.Dona = false; p.TwoShot = true; p.RoomName = "2ｼｮｯﾄ"; p.OtherInfo += "待ち合わせ "; break;
                     case "wh": continue; //ワールドマシェリなので登録しない
                     case "offh": continue; //オフラインなので登録しない
                     default: Log.Add(Site + "-不明な状態:", sStatus, LogColor.Error); break;
