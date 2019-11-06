@@ -10,8 +10,8 @@ using System.Diagnostics;
 using System.Reflection;
 using System.CodeDom.Compiler;
 using Microsoft.JScript;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
+//using System.Net.Security;
+//using System.Security.Cryptography.X509Certificates;
 using System.Collections.Specialized;
 using System.Globalization;
 using LiveViewer;
@@ -109,7 +109,7 @@ namespace Plugin_AngelLive {
 
         public string Site       { get { return "AngelLive"; } }
 
-        public string Caption    { get { return "AngelLive用のプラグイン(2019/10/09版)"; } }
+        public string Caption    { get { return "AngelLive用のプラグイン(2019/11/06版)"; } }
 
         public string TopPageUrl { get { return "https://www.angel-live.com/"; } }
 
@@ -148,10 +148,11 @@ namespace Plugin_AngelLive {
                 //WebからJsファイルを読み取る
                 StringBuilder sb = new StringBuilder();
                 sb.Append("(");
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
                 using (WebClient wc = new WebClient()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site); //User-Agentを設定
                     wc.Encoding = Encoding.GetEncoding("EUC-JP");
-                    sb.Append(wc.DownloadString("http://livechat.angel-live.com/lib/=/load_online.js"));
+                    sb.Append(wc.DownloadString("https://livechat.angel-live.com/lib/=/load_online.js"));
                 }
                 sb.Append(");");
                 sb.Replace("\r\n", "");
