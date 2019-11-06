@@ -98,7 +98,7 @@ namespace Plugin_LiveDe55 {
 
         public string Site       { get { return "livede55"; } }
 
-        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/10/15版)"; } }
+        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/11/06版)"; } }
 
         public string TopPageUrl { get { return "https://livede55.com/"; } }
 
@@ -137,15 +137,15 @@ namespace Plugin_LiveDe55 {
             try {
                 //データー取得
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
-                using (WebClientEx Client = new WebClientEx()) {
+                using (WebClientEx wc = new WebClientEx()) {
                     //WebからJSONデータを取得する(GET)
-                    Client.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
-                    Client.Headers.Add(HttpRequestHeader.Referer, TopPageUrl);
-                    Client.Headers.Add("X-Requested-With","XMLHttpRequest");
-                    Client.Headers.Add("Accept-Language","ja,en-US;q=0.8,en;q=0.6");
-
-                    byte[] resArray = Client.DownloadData(TopPageUrl + "ajax/top/all-performers-with-ds");
-                    string resData = "(" + Encoding.UTF8.GetString(resArray) + ");";
+                    wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
+                    wc.Headers.Add(HttpRequestHeader.Referer, TopPageUrl);
+                    wc.Headers.Add("X-Requested-With","XMLHttpRequest");
+                    wc.Headers.Add("Accept-Language","ja,en-US;q=0.8,en;q=0.6");
+                    wc.Encoding = Encoding.UTF8;
+                    string resData = wc.DownloadString(TopPageUrl + "ajax/top/all-performers-with-ds");
+                    resData = "(" + resData + ");";
                     //string resData = ("({\"result\":false,\"html\":\"abcdef\",\"banner_html\":\"\"});");
 
                     //Jsファイルの内容を実行する
