@@ -110,7 +110,7 @@ namespace Plugin_Macherie {
 
         public string Site       { get { return "macherie"; } }
 
-        public string Caption    { get { return "マシェリ用のプラグイン(2019/11/06版)"; } }
+        public string Caption    { get { return "マシェリ用のプラグイン(2019/11/09版)"; } }
 
         public string TopPageUrl { get { return "https://www.macherie.tv/"; } }
 
@@ -161,7 +161,9 @@ namespace Plugin_Macherie {
                 JSObject top = JsExecuterType.InvokeMember("Eval", BindingFlags.InvokeMethod, null, JsExecuterObject, new object[] { resData }) as JSObject;
                 //ノード毎にデーターを読み込む
                 foreach (string sNode in xxNode) {
-                    if (top.GetField(sNode, BindingFlags.Default).GetValue(null) as string == "notNode") continue;
+                    Type ty = top.GetField(sNode, BindingFlags.Default).GetValue(null).GetType();
+                    if (Pub.DebugMode == true ) Log.Add(Site, sNode + ": Type " + ty.Name, LogColor.Warning); //DEBUG
+                    if (ty.Name != "ArrayObject") continue;
                     ArrayObject obj = top.GetField(sNode, BindingFlags.Default).GetValue(null) as ArrayObject;
                     for (int i = 0; i < (int)obj.length; i++) {
                         JSObject jso = new JSObject();
@@ -178,6 +180,7 @@ namespace Plugin_Macherie {
             }
 
             //データーを読み込んで pefs に追加
+            if (Pub.DebugMode == true ) Log.Add(Site, "jso2.Count = " + jso2.Count, LogColor.Warning); //DEBUG
             foreach (JSObject jso in jso2) {
                 string sID = jso.GetField("hs", BindingFlags.Default).GetValue(null) as string;
                 Performer p = new Performer(this, sID);
