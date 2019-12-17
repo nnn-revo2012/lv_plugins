@@ -98,7 +98,7 @@ namespace Plugin_LiveDe55 {
 
         public string Site       { get { return "livede55"; } }
 
-        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/11/06版)"; } }
+        public string Caption    { get { return "ライブでゴーゴー用のプラグイン(2019/12/17版)"; } }
 
         public string TopPageUrl { get { return "https://livede55.com/"; } }
 
@@ -337,6 +337,9 @@ namespace Plugin_LiveDe55 {
         }
 
         public string GetFlashUrl(Performer performer) {
+            return "https://assets.livede55.com/common/swf/chat/male_wait_wide.swf?190424&ownerCode=16605&performerCode="
+                  + performer.ID + "&sessionCode=&domain=livede55.com";
+            /*
             //FlashのURLを返す・・待機画像ページのHTMLから取得する
             string sFlash = null;
             try {
@@ -360,6 +363,7 @@ namespace Plugin_LiveDe55 {
                 Log.Add(Site + "-GetFlashUrl失敗", ex.ToString(), LogColor.Error);
             }
             return sFlash;
+            */
         }
 
         public Clipping GetFlashClipping(Performer performer) {

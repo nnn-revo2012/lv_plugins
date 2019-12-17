@@ -93,7 +93,7 @@ namespace Plugin_Caribbeancomgirl {
 
         public string Site       { get { return "caribbeancomgirl"; } }
 
-        public string Caption    { get { return "カリビアンコムガール用のプラグイン(2019/05/03版)"; } }
+        public string Caption    { get { return "カリビアンコムガール用のプラグイン(2019/12/18版)"; } }
 
         public string TopPageUrl { get { return "https://www.caribbeancomgirl.com/"; } }
 
@@ -193,6 +193,9 @@ namespace Plugin_Caribbeancomgirl {
                     case "wvibe":
                         p.TwoShot = pefs2Shot.Exists(delegate (string s) {return s == sID;}); //チャットor2ショット判定
                         p.Dona = true; p.RoomName = "2ﾊﾞｲﾌﾞ"; break;
+                    case "tvibe":
+                        p.TwoShot = pefs2Shot.Exists(delegate (string s) {return s == sID;}); //チャットor2ショット判定
+                        p.Dona = true; p.RoomName = "3ﾊﾞｲﾌﾞ"; break;
                     default: Log.Add(Site + " - " + p.Name, "不明な状態: " + item.GetAttributeValue("class"), LogColor.Error); break;
                 }
 
@@ -225,24 +228,37 @@ namespace Plugin_Caribbeancomgirl {
         public string GetFlashUrl(Performer performer) {
             //2010/04/25 最初JSONファイルを読み込んでIDを探す。IDがない場合だけプロフを読むよう変更（負荷対策？）
             //FlashのURLを返す・・JSONファイルまたは待機画像ページのHTMLから取得する
+//https://www.caribbeancomgirl.com/flash/chat/limited_preview.swf?channel=76485149&from_site=1003332&performer_id=76485149
+//&performer_name=Myakporno&session_type=115&vw_count=1&lang_id=jp&userSiteID=&skinName=&user_type=
+//&copyright=(C)2004 Caribbeancomgirl.com ALL RIGHTS RESERVED.
             string sFlash = null;
             try {
                 using (WebClient wc = new WebClient()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
                     //JSONファイルを読み込んでユーザーIDをGETする
                     string sHtml = wc.DownloadString(TopPageUrl + "json/performer");
-                    Regex RegexParseOnline = new Regex("\"" + performer.Name + "\":{\"user_id\":\"([^\"]*)\"");
+                    Regex RegexParseOnline = new Regex("\"" + performer.Name + "\":{\"user_id\":\"([^\"]*)\",\"session\":\"([^\"]*)\",\"component\":\"([^\"]*)\",\"num\":\"([^\"]*)\",\"hd\":([0-9]*)}");
                     Match m = RegexParseOnline.Match(sHtml);
                     if (m.Success) {
                         //FlashファイルのURLを作成
                         sFlash  = TopPageUrl + "flash/chat/freePreview20.swf?"; //freePreview20.swf | limitedFreePreview20.swf
                         sFlash += "channel=" + m.Groups[1].Value + "&performerID=" + m.Groups[1].Value + "&langID=jp";
+                        /*
+                        sFlash = TopPageUrl + "flash/chat/limited_preview.swf?"; //freePreview20.swf | limitedFreePreview20.swf
+                        sFlash += "channel=" + m.Groups[1].Value;
+                        sFlash += "&from_site=1003332&performer_id=" + m.Groups[1].Value;
+                        sFlash += "&performer_name=" + performer.Name;
+                        sFlash += "&session_type=" + m.Groups[2].Value;
+                        sFlash += "&vw_count=" + m.Groups[4].Value + "&lang_id=jp&userSiteID=&skinName=&user_type=";
+                        sFlash += "&copyright=(C)2004 Caribbeancomgirl.com ALL RIGHTS RESERVED.";
+                        */
                     } else {
                         //JSONファイルにないのでプロフからURL取得
                         Log.Add(Site + " - " + performer.Name, "JSONにIDなし", LogColor.Error);
                         sHtml = wc.DownloadString(TopPageUrl + "preview/" + performer.Name);
                         if (RegexGetSwf.Match(sHtml).Groups[1].Value != null) {
-                            sFlash = TopPageUrl + "flash/chat/freePreview20.swf?"; //freePreview20.swf | limitedFreePreview20.swf
+                            //sFlash = TopPageUrl + "flash/chat/freePreview20.swf?"; //freePreview20.swf | limitedFreePreview20.swf
+                            sFlash = TopPageUrl + "flash/chat/limited_preview.swf?"; //freePreview20.swf | limitedFreePreview20.swf
                             sFlash += RegexGetSwf.Match(sHtml).Groups[1].Value;
                         }
                     }
@@ -251,6 +267,7 @@ namespace Plugin_Caribbeancomgirl {
             } catch (Exception ex) {
                 Log.Add(Site + "-GetFlashUrl失敗", ex.ToString(), LogColor.Error);
             }
+            //Clipboard.SetText(sFlash);
             return sFlash;
         }
 

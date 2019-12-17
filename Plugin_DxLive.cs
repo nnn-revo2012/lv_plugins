@@ -84,7 +84,8 @@ namespace Plugin_DxLive {
 
         private Regex RegexGetID       = new Regex("/(preview|profile)/(.*)", RegexOptions.Compiled); //ID取得用 2014/06/13
         private Regex RegexGetStatus   = new Regex("thumbnail +([a-zA-Z0-9_]+) +(studio)?", RegexOptions.Compiled); //Status取得用 2014/01/04
-        private Regex RegexGetSwf      = new Regex("var[ \\t\\n]+flash_var[ \\t\\n]*=[ \\t\\n]*'([^']*)'", RegexOptions.Compiled); //Swf表示用 2010/04/25
+        private Regex RegexGetSwf      = new Regex("var[ \\t\\n]+FlashVars[ \\t\\n]*=[ \\t\\n]*\"([^\"]*)\"", RegexOptions.Compiled); //Swf表示用 2010/04/25
+        private Regex RegexGetPfid     = new Regex("var[ \\t\\n]+pf_id[ \\t\\n]*=[ \\t\\n]*\"([^\"]*)\"", RegexOptions.Compiled); //pf_id表示用 2019/12/17
 
         #endregion
 
@@ -93,7 +94,7 @@ namespace Plugin_DxLive {
 
         public string Site       { get { return "DXlive"; } }
 
-        public string Caption    { get { return "DXLive用のプラグイン(2019/05/03版)"; } }
+        public string Caption    { get { return "DXLive用のプラグイン(2019/12/18版)"; } }
 
         public string TopPageUrl { get { return "https://www.dxlive.com/"; } }
 
@@ -236,25 +237,40 @@ namespace Plugin_DxLive {
         public string GetFlashUrl(Performer performer) {
             //2010/04/25 最初JSONファイルを読み込んでIDを探す。IDがない場合だけプロフを読むよう変更（負荷対策？）
             //FlashのURLを返す・・JSONファイルまたは待機画像ページのHTMLから取得する
+//https://www.dxlive.com/flash/chat/preview.swf?channel=75404947&from_site=1000048&performer_id=75404947
+//&performer_name=xNANAKAx20&session_type=115&vw_count=1&lang_id=jp&userSiteID=1000048&skinName=&user_type=
+//&copyright=(C)2002 DXLIVE.COM ALL RIGHTS RESERVED.
             string sFlash = null;
             try {
                 using (WebClient wc = new WebClient()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
                     //JSONファイルを読み込んでユーザーIDをGETする
                     string sHtml = wc.DownloadString(TopPageUrl + "json/performer");
-                    Regex RegexParseOnline = new Regex("\"" + performer.Name + "\":{\"user_id\":\"([^\"]*)\"");
+                    Regex RegexParseOnline = new Regex("\"" + performer.Name + "\":{\"user_id\":\"([^\"]*)\",\"session\":\"([^\"]*)\",\"component\":\"([^\"]*)\",\"num\":\"([^\"]*)\",\"hd\":([0-9]*)}");
                     Match m = RegexParseOnline.Match(sHtml);
                     if (m.Success) {
                         //FlashファイルのURLを作成
                         sFlash  = TopPageUrl + "flash/chat/freePreview20.swf?"; //freePreview20.swf | limitedFreePreview20.swf
                         sFlash += "channel=" + m.Groups[1].Value + "&performerID=" + m.Groups[1].Value + "&langID=jp";
+                        /*
+                        sFlash = TopPageUrl + "flash/chat/preview.swf?"; //freePreview20.swf | limitedFreePreview20.swf
+                        sFlash += "channel=" + m.Groups[1].Value;
+                        sFlash += "&from_site=1000048&performer_id=" + m.Groups[1].Value;
+                        sFlash += "&performer_name=" + performer.Name;
+                        sFlash += "&session_type=" + m.Groups[2].Value;
+                        sFlash += "&vw_count=" + m.Groups[4].Value + "&lang_id=jp&userSiteID=1000048&skinName=&user_type=";
+                        sFlash += "&copyright=(C)2002 DXLIVE.COM ALL RIGHTS RESERVED.";
+                        */
                     } else {
                         //JSONファイルにないのでプロフからURL取得
                         Log.Add(Site + " - " + performer.Name, "JSONにIDなし", LogColor.Error);
                         sHtml = wc.DownloadString(TopPageUrl + "preview/" + performer.Name);
-                        if (RegexGetSwf.Match(sHtml).Groups[1].Value != null) {
+                        if (RegexGetPfid.Match(sHtml).Groups[1].Value != null) {
                             sFlash = TopPageUrl + "flash/chat/freePreview20.swf?"; //freePreview20.swf | limitedFreePreview20.swf
-                            sFlash += RegexGetSwf.Match(sHtml).Groups[1].Value;
+                            sFlash += "channel=" + RegexGetPfid.Match(sHtml).Groups[1].Value + "&performerID=" + RegexGetPfid.Match(sHtml).Groups[1].Value + "&langID=jp";
+                        //if (RegexGetSwf.Match(sHtml).Groups[1].Value != null) {
+                        //    sFlash = TopPageUrl + "flash/chat/preview.swf?"; //freePreview20.swf | limitedFreePreview20.swf
+                        //    sFlash += RegexGetSwf.Match(sHtml).Groups[1].Value;
                         }
                     }
                     Pub.WebRequestCount++; //GUIの読込回数を増やす
@@ -262,6 +278,7 @@ namespace Plugin_DxLive {
             } catch (Exception ex) {
                 Log.Add(Site + "-GetFlashUrl失敗", ex.ToString(), LogColor.Error);
             }
+            //Clipboard.SetText(sFlash);
             return sFlash;
         }
 

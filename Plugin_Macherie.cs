@@ -88,7 +88,7 @@ namespace Plugin_Macherie {
         private string[] xxNode = new string[]{"eventNode", "partyNode", "firstNode", "secondNode"};
 
         //HTML解析用の正規表現
-        private Regex RegexGetSwf = new Regex("<param name=\"movie\" value=\"([^\"]*)\"", RegexOptions.Compiled);
+        private Regex RegexGetSwf = new Regex("<param name=\"movie\" value=\"/?([^\"]*)\"", RegexOptions.Compiled);
 
         private Type   JsExecuterType   = null;
         private object JsExecuterObject = null;
@@ -110,7 +110,7 @@ namespace Plugin_Macherie {
 
         public string Site       { get { return "macherie"; } }
 
-        public string Caption    { get { return "マシェリ用のプラグイン(2019/11/09版)"; } }
+        public string Caption    { get { return "マシェリ用のプラグイン(2019/12/17版)"; } }
 
         public string TopPageUrl { get { return "https://www.macherie.tv/"; } }
 
@@ -272,6 +272,7 @@ namespace Plugin_Macherie {
             } catch (Exception ex) {
                 Log.Add(Site + "-GetFlashUrl失敗", ex.ToString(), LogColor.Error);
             }
+            //Clipboard.SetText(sFlash);
             return sFlash;
         }
 

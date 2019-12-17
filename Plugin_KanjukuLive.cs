@@ -81,9 +81,9 @@ namespace Plugin_KanjukuLive {
 
         private Parser Parser          = new Parser();    //HTML解析用パーサ
 
-        private Regex RegexGetPef    = new Regex("aPFBoxOuter (.*)", RegexOptions.Compiled); //Data取得用
-        private Regex RegexGetStatus = new Regex("thumbStatus", RegexOptions.Compiled); //Status取得用
-        private Regex RegexGetAge    = new Regex("\\(((.[0-9]*)才|秘密)\\)", RegexOptions.Compiled); //年齢取得用
+        private Regex RegexGetPef      = new Regex("aPFBoxOuter (.*)", RegexOptions.Compiled); //Data取得用
+        private Regex RegexGetStatus   = new Regex("thumbStatus", RegexOptions.Compiled); //Status取得用
+        private Regex RegexGetAge      = new Regex("\\(((.[0-9]*)才|秘密)\\)", RegexOptions.Compiled); //年齢取得用
 
         #endregion
 
@@ -92,7 +92,7 @@ namespace Plugin_KanjukuLive {
 
         public string Site       { get { return "KanjukuLive"; } }
 
-        public string Caption    { get { return "感熟ライブ用のプラグイン(2019/05/03版)"; } }
+        public string Caption    { get { return "感熟ライブ用のプラグイン(2019/12/18版)"; } }
 
         public string TopPageUrl { get { return "http://www.kanjukulive.com/"; } }
 
@@ -209,7 +209,7 @@ namespace Plugin_KanjukuLive {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
                     //JSONファイルを読み込んでユーザーIDをGETする
                     string sHtml = wc.DownloadString(TopPageUrl + "json/performer");
-                    Regex RegexParseOnline = new Regex("\"" + performer.Name + "\":{\"user_id\":\"([^\"]*)\",\"session\":\"([^\"]*)\",\"component\":\"([^\"]*)\",\"num\":\"([^\"]*)\",\"hd\":\"([0-9]*)\"}");
+                    Regex RegexParseOnline = new Regex("\"" + performer.Name + "\":{\"user_id\":\"([^\"]*)\",\"session\":\"([^\"]*)\",\"component\":\"([^\"]*)\",\"num\":\"([^\"]*)\",\"hd\":([0-9]*)}");
                     Match m = RegexParseOnline.Match(sHtml);
                     if (m.Success) {
                         //FlashファイルのURLを作成
@@ -224,7 +224,7 @@ namespace Plugin_KanjukuLive {
                         //JSONファイルにないのでプロフからURL取得
                         Log.Add(Site + " - " + performer.Name, "JSONにIDなし", LogColor.Error);
                         sHtml = wc.DownloadString(TopPageUrl + "profile/" + performer.Name + "/preview");
-                        Regex RegexGetSwf = new Regex("fillswf\\('" + performer.Name + "', +([^']*)\\)", RegexOptions.Compiled); //Swf表示用 2010/04/25
+                        Regex RegexGetSwf = new Regex("fillswf\\('" + performer.Name + "', +([0-9]*)\\)", RegexOptions.Compiled); //Swf表示用 2010/04/25
                         if (RegexGetSwf.Match(sHtml).Groups[1].Value != null) {
                             sFlash = TopPageUrl + "flash/chat/preview.swf?"; //freePreview20.swf | limitedFreePreview20.swf
                             sFlash += "from_site=1001343&performer_id=" + RegexGetSwf.Match(sHtml).Groups[1].Value;
@@ -242,7 +242,7 @@ namespace Plugin_KanjukuLive {
             } catch (Exception ex) {
                 Log.Add(Site + "-GetFlashUrl失敗", ex.ToString(), LogColor.Error);
             }
-//MessageBox.Show(sFlash);
+            //Clipboard.SetText(sFlash);
             return sFlash;
         }
 
