@@ -110,7 +110,7 @@ namespace Plugin_Macherie {
 
         public string Site       { get { return "macherie"; } }
 
-        public string Caption    { get { return "マシェリ用のプラグイン(2019/12/17版)"; } }
+        public string Caption    { get { return "マシェリ用のプラグイン(2019/12/20版)"; } }
 
         public string TopPageUrl { get { return "https://www.macherie.tv/"; } }
 
@@ -149,11 +149,11 @@ namespace Plugin_Macherie {
             try {
                 //WebからJsファイルを読み取る
                 string resData = string.Empty;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
+                //ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
                 using (WebClient wc = new WebClient()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site); //User-Agentを設定
                     wc.Encoding = Encoding.GetEncoding("Shift_JIS");
-                    resData = wc.DownloadString(TopPageUrl + "xxnode-neo.php");
+                    resData = wc.DownloadString("http://www.macherie.tv/" + "xxnode.php");
                 }
                 resData = "(" + resData.Replace("\r\n", "") + ");";
 
@@ -261,12 +261,12 @@ namespace Plugin_Macherie {
             //FlashのURLを返す・・待機画像ページのHTMLから取得する
             string sFlash = null;
             try {
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
+                //ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
                 using (WebClient wc = new WebClient()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
                     wc.Encoding = Encoding.GetEncoding("Shift_JIS");
                     string sHtml = wc.DownloadString(TopPageUrl + "chat/shicho.php?id=" + performer.ID);
-                    sFlash = TopPageUrl + RegexGetSwf.Match(sHtml).Groups[1].Value;
+                    sFlash = "http://www.macherie.tv/" + RegexGetSwf.Match(sHtml).Groups[1].Value;
                     Pub.WebRequestCount++; //GUIの読込回数を増やす
                 }
             } catch (Exception ex) {
