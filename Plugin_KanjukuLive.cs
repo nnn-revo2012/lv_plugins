@@ -92,7 +92,7 @@ namespace Plugin_KanjukuLive {
 
         public string Site       { get { return "KanjukuLive"; } }
 
-        public string Caption    { get { return "感熟ライブ用のプラグイン(2019/12/18版)"; } }
+        public string Caption    { get { return "感熟ライブ用のプラグイン(2020/01/21版)"; } }
 
         public string TopPageUrl { get { return "http://www.kanjukulive.com/"; } }
 
@@ -106,11 +106,17 @@ namespace Plugin_KanjukuLive {
 
         public List<Performer> Update() {
             List<Performer> pefs = new List<Performer>();
+            string resData;
 
             try {
-                Parser.UserAgent = Pub.UserAgent + "_" + Site; //User-Agentを設定
-                Parser.LoadHtml(new Uri(TopPageUrl + "search?online=1"), "UTF-8");
-                Parser.ParseTree();
+                //ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
+                using (WebClient wc = new WebClient()) {
+                    //WebからJSONデータを取得する(GET)
+                    wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
+                    wc.Headers.Add(HttpRequestHeader.Referer, TopPageUrl);
+                    wc.Encoding = Encoding.UTF8;
+                    resData = wc.DownloadString(TopPageUrl + "search?online=1");
+                }
                 Pub.WebRequestCount++;
             } catch (Exception ex) {
                 Log.Add(Site + "-Update失敗", ex.ToString(), LogColor.Error);
@@ -118,6 +124,8 @@ namespace Plugin_KanjukuLive {
             }
 
             //パフォ情報のタグを取得
+            Parser.LoadHtml(resData);
+            Parser.ParseTree();
             List<HtmlItem> tagTops = Parser.Find("div", "class", RegexGetPef);
             Parser.Clear();
 

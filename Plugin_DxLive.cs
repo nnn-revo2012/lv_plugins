@@ -83,7 +83,7 @@ namespace Plugin_DxLive {
         private Parser Parser          = new Parser();    //HTML解析用パーサ
 
         private Regex RegexGetID       = new Regex("/(preview|profile)/(.*)", RegexOptions.Compiled); //ID取得用 2014/06/13
-        private Regex RegexGetStatus   = new Regex("thumbnail +([a-zA-Z0-9_]+) +(studio)?", RegexOptions.Compiled); //Status取得用 2014/01/04
+        private Regex RegexGetStatus   = new Regex("nl-th-thumbBox +([^\"]*)", RegexOptions.Compiled); //Status取得用 2014/01/04
         private Regex RegexGetSwf      = new Regex("var[ \\t\\n]+FlashVars[ \\t\\n]*=[ \\t\\n]*\"([^\"]*)\"", RegexOptions.Compiled); //Swf表示用 2010/04/25
         private Regex RegexGetPfid     = new Regex("var[ \\t\\n]+pf_id[ \\t\\n]*=[ \\t\\n]*\"([^\"]*)\"", RegexOptions.Compiled); //pf_id表示用 2019/12/17
 
@@ -94,7 +94,7 @@ namespace Plugin_DxLive {
 
         public string Site       { get { return "DXlive"; } }
 
-        public string Caption    { get { return "DXLive用のプラグイン(2019/12/18版)"; } }
+        public string Caption    { get { return "DXLive用のプラグイン(2020/01/21版)"; } }
 
         public string TopPageUrl { get { return "https://www.dxlive.com/"; } }
 
@@ -109,36 +109,26 @@ namespace Plugin_DxLive {
         public List<Performer> Update() {
             List<Performer> pefs = new List<Performer>();
             List<string> pefs2Shot = new List<string>();
-
-            //2ShotのパフォーマーIDのみリストアップ 2014/06/13
-            try {
-                Parser.UserAgent = Pub.UserAgent + "_" + Site; //User-Agentを設定
-                Parser.LoadHtml(new Uri(TopPageUrl + "search?online=1&session_type=125,130,135"), "UTF-8");
-                Parser.ParseTree();
-                Pub.WebRequestCount++;
-            } catch (Exception ex) {
-                Log.Add(Site + "-Update失敗", ex.ToString(), LogColor.Error);
-                return null;
-            }
-            List<HtmlItem> tag2Shot = Parser.Find("div", "class", RegexGetStatus);
-            Parser.Clear();
-            if (Pub.DebugMode == true ) Log.Add(Site, "tag2Shot.Count: " + tag2Shot.Count, LogColor.Warning); //DEBUG
-            foreach (HtmlItem item in tag2Shot) {
-                string sID = RegexGetID.Match(item.Find("a", "class", "pname", true)[0].GetAttributeValue("href")).Groups[2].Value;
-                pefs2Shot.Add(sID);
-            }
+            string resData;
 
             //パフォーマー全員
             try {
-                Parser.UserAgent = Pub.UserAgent + "_" + Site; //User-Agentを設定
-                Parser.LoadHtml(new Uri(TopPageUrl + "search?online=1"), "UTF-8");
-                Parser.ParseTree();
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
+                using (WebClient wc = new WebClient()) {
+                    //WebからJSONデータを取得する(GET)
+                    wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
+                    wc.Headers.Add(HttpRequestHeader.Referer, TopPageUrl);
+                    wc.Encoding = Encoding.UTF8;
+                    resData = wc.DownloadString(TopPageUrl + "search?online=1&order_by=enc_band&nl=1&hide_pf_guest=1&coupon=0");
+                }
                 Pub.WebRequestCount++;
             } catch (Exception ex) {
                 Log.Add(Site + "-Update失敗", ex.ToString(), LogColor.Error);
                 return null;
             }
 
+            Parser.LoadHtml(resData);
+            Parser.ParseTree();
             //パフォ情報のタグを取得
             List<HtmlItem> tagTops = Parser.Find("div", "class", RegexGetStatus);
             Parser.Clear();
@@ -146,7 +136,7 @@ namespace Plugin_DxLive {
             if (Pub.DebugMode == true ) Log.Add(Site, "tagTops.Count: " + tagTops.Count, LogColor.Warning); //DEBUG
             foreach (HtmlItem item in tagTops) {
                 //2010/04/25 11文字以上のIDだと名前が...で省略されるんで a href ... から取得するように変更
-                string sID = RegexGetID.Match(item.Find("a", "class", "pname", true)[0].GetAttributeValue("href")).Groups[2].Value;
+                string sID = RegexGetID.Match(item.Find("a", "class", "nl-th-lowerPart", true)[0].GetAttributeValue("href")).Groups[2].Value;
                 if (Pub.DebugMode == true )
                     if (pefs.Count < 1) Log.Add(Site, "ID OK", LogColor.Warning); //DEBUG
 
@@ -155,29 +145,29 @@ namespace Plugin_DxLive {
                 p.ImageUrl = "https://imageup.dxlive.com/WebArchive/" + p.Name + "/live/LinkedImage.jpg";
                 p.ImageUpdateCheck = false;
 
-                // 人数 2014/06/28修正
-                if (item.Find("div", "class", "user_num", true).Count > 0) {
-                    HtmlItem tmp2 = item.Find("div", "class", "user_num", true)[0];
-                    if (tmp2.Items.Count > 0) {
-                        p.DonaCount = int.Parse(tmp2.Items[0].Text);
+                // 人数
+                int num;
+                if (item.Find("span", "class", "nl-th-vwrCnt", true).Count > 0) {
+                    HtmlItem tmp1 = item.Find("span", "class", "nl-th-vwrCnt", true)[0];
+                    if (tmp1.Items.Count > 1) {
+                        if (int.TryParse(tmp1.Items[1].Text, out num))
+                            p.DonaCount = num;
                     }
                 }
 
                 // 新人とデビューのステータス
-                HtmlItem tmp1 = item.Find("div", "class", "icon_area", false)[0];
-                if (tmp1.Find("img", "src", "/img/icons/icon_fg4Final.gif", true).Count > 0) {
+                if (item.Find("span", "class", "nl-th-icon-super-newbie nl-th-icon", true).Count > 0) {
                     p.Debut = true;
                 }
-                if (tmp1.Find("img", "src", "/img/icons/icon_new_girl.gif", true).Count > 0) {
+                if (item.Find("span", "class", "nl-th-icon-newbie nl-th-icon", true).Count > 0) {
                     p.NewFace = true;
                 }
 
 #if !NOCOMMENT
-                //2012/01/06 メッセージ取得　タグの中身があるかチェック
-                tmp1 = item.Find("div", "id", "pftext", true)[0];
-                if (tmp1.Items.Count > 0) {
-                    if (tmp1.Items[0].Items.Count > 0) {
-                        string ttt = tmp1.Items[0].Items[0].Text;
+                if (item.Find("li", "class", "nl-th-pfInfoTxt", true).Count > 0) {
+                    HtmlItem tmp1 = item.Find("li", "class", "nl-th-pfInfoTxt", true)[0];
+                    if (tmp1.Items.Count > 0) {
+                        string ttt = tmp1.Items[0].Text;
                         if (Pub.DebugMode)
                             if (HttpUtilityEx2.IsSurrogatePair(ttt))
                                 Log.Add(Site + " - " + p.Name, "サロゲートペア文字あり", LogColor.Warning);
@@ -186,37 +176,22 @@ namespace Plugin_DxLive {
                 }
 #endif
 
-                //ステータス 2014/06/13修正
+                //ステータス
                 string sStat = item.GetAttributeValue("class");
                 switch (RegexGetStatus.Match(sStat).Groups[1].Value) {
-                    case "standby":
-                    case "standbyHD":
+                    case "standby ":
+                    case "freechat ":
                         p.TwoShot = false; p.Dona = false; break;
-                    case "session":
-                    case "sessionHD":
+                    case "session ":
                         p.TwoShot = false; p.Dona = true; break;
-                    case "twoshot":
-                    case "twoshotHD":
+                    case "toy nl-blink1":
+                        p.TwoShot = false; p.Dona = true; p.RoomName = "ﾊﾞｲﾌﾞ"; break;
+                    case "toy nl-blink2":
+                        p.TwoShot = false; p.Dona = true; p.RoomName = "2ﾊﾞｲﾌﾞ"; break;
+                    case "toy nl-blink3":
+                        p.TwoShot = false; p.Dona = true; p.RoomName = "3ﾊﾞｲﾌﾞ"; break;
+                    case "twoshot ":
                         p.TwoShot = true; p.Dona = true;  break;
-                    case "perfect2shot":
-                    case "perfect2shotHD":
-                        p.TwoShot = true; p.Dona = true; p.RoomName = "ｶﾝｾﾞﾝ2"; break;
-                    case "tatsujin":
-                        p.TwoShot = pefs2Shot.Exists(delegate (string s) {return s == sID;}); //チャットor2ショット判定
-                        p.Dona = true; break;
-                    case "remoBLINK":
-                    case "remoHDBLINK":
-                    case "remo":
-                    case "remoHD":
-                    case "tatsujin_remo1BLINK":
-                        p.TwoShot = pefs2Shot.Exists(delegate (string s) {return s == sID;}); //チャットor2ショット判定
-                        p.Dona = true; p.RoomName = "ﾊﾞｲﾌﾞ"; break;
-                    case "remo2BLINK":
-                    case "remo2HDBLINK":
-                    case "remo2HD":
-                    case "tatsujin_remo2BLINK":
-                        p.TwoShot = pefs2Shot.Exists(delegate (string s) {return s == sID;}); //チャットor2ショット判定
-                        p.Dona = true; p.RoomName = "2ﾊﾞｲﾌﾞ"; break;
                     default: Log.Add(Site + " - " + p.Name, "不明な状態: " + item.GetAttributeValue("class"), LogColor.Error); break;
                 }
 

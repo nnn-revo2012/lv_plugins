@@ -61,7 +61,7 @@ namespace Plugin_Macherie {
         //か\u3099
         private class HttpUtilityEx2 {
             public static string HtmlDecode(string s) {
-                if (!IsSurrogatePair(s)) return HttpUtilityEx.HtmlDecode(s);
+                if (!IsSurrogatePair(s)) return System.Web.HttpUtility.HtmlDecode(s);
 
                 StringBuilder sb = new StringBuilder();
                 TextElementEnumerator tee = StringInfo.GetTextElementEnumerator(s);
@@ -71,7 +71,7 @@ namespace Plugin_Macherie {
                     if (1 < te.Length) continue; //サロペートペアまたは結合文字
                     sb.Append(te);
                 }
-                return HttpUtilityEx.HtmlDecode(sb.ToString());
+                return System.Web.HttpUtility.HtmlDecode(sb.ToString());
             }
 
             public static bool IsSurrogatePair(string s) {
@@ -110,7 +110,7 @@ namespace Plugin_Macherie {
 
         public string Site       { get { return "macherie"; } }
 
-        public string Caption    { get { return "マシェリ用のプラグイン(2019/12/20版)"; } }
+        public string Caption    { get { return "マシェリ用のプラグイン(2020/01/21版)"; } }
 
         public string TopPageUrl { get { return "https://www.macherie.tv/"; } }
 

@@ -93,7 +93,7 @@ namespace Plugin_Caribbeancomgirl {
 
         public string Site       { get { return "caribbeancomgirl"; } }
 
-        public string Caption    { get { return "カリビアンコムガール用のプラグイン(2019/12/18版)"; } }
+        public string Caption    { get { return "カリビアンコムガール用のプラグイン(2020/01/21版)"; } }
 
         public string TopPageUrl { get { return "https://www.caribbeancomgirl.com/"; } }
 
@@ -108,18 +108,26 @@ namespace Plugin_Caribbeancomgirl {
         public List<Performer> Update() {
             List<Performer> pefs = new List<Performer>();
             List<string> pefs2Shot = new List<string>();
+            string resData;
 
             //2ShotのパフォーマーIDのみリストアップ
             try {
-                Parser.UserAgent = Pub.UserAgent + "_" + Site; //User-Agentを設定
-                Parser.LoadHtml(new Uri(TopPageUrl + "search?online=1&session_type=125,130,135"), "UTF-8");
-                Parser.ParseTree();
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
+                using (WebClient wc = new WebClient()) {
+                    //WebからJSONデータを取得する(GET)
+                    wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
+                    wc.Headers.Add(HttpRequestHeader.Referer, TopPageUrl);
+                    wc.Encoding = Encoding.UTF8;
+                    resData = wc.DownloadString(TopPageUrl + "search?online=1&session_type=125,130,135");
+                }
                 Pub.WebRequestCount++;
             } catch (Exception ex) {
                 Log.Add(Site + "-Update失敗", ex.ToString(), LogColor.Error);
                 return null;
             }
 
+            Parser.LoadHtml(resData);
+            Parser.ParseTree();
             List<HtmlItem> tag2Shot = Parser.Find("dl", "class", RegexGetPefs);
             Parser.Clear();
             if (Pub.DebugMode == true ) Log.Add(Site, "tag2Shot.Count: " + tag2Shot.Count, LogColor.Warning); //DEBUG
@@ -131,9 +139,14 @@ namespace Plugin_Caribbeancomgirl {
 
             //パフォーマー全員
             try {
-                Parser.UserAgent = Pub.UserAgent + "_" + Site; //User-Agentを設定
-                Parser.LoadHtml(new Uri(TopPageUrl + "search?online=1&session_type=110,115,120,125,130,135"), "UTF-8");
-                Parser.ParseTree();
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
+                using (WebClient wc = new WebClient()) {
+                    //WebからJSONデータを取得する(GET)
+                    wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
+                    wc.Headers.Add(HttpRequestHeader.Referer, TopPageUrl);
+                    wc.Encoding = Encoding.UTF8;
+                    resData = wc.DownloadString(TopPageUrl + "search?online=1&session_type=110,115,120,125,130,135");
+                }
                 Pub.WebRequestCount++;
             } catch (Exception ex) {
                 Log.Add(Site + "-Update失敗", ex.ToString(), LogColor.Error);
@@ -141,6 +154,8 @@ namespace Plugin_Caribbeancomgirl {
             }
 
             //パフォ情報のタグを取得
+            Parser.LoadHtml(resData);
+            Parser.ParseTree();
             List<HtmlItem> tagTops = Parser.Find("dl", "class", RegexGetPefs);
             Parser.Clear();
 
