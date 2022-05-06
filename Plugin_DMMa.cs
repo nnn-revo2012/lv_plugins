@@ -1,6 +1,6 @@
 ﻿#define ACHA //アダルト
 //#define MACHA //マダム
-//#define WACHA //ワールド
+//#define VIRTUAL //バーチャル
 //#define OCHA //おしゃべり
 using System;
 using System.Collections.Generic;
@@ -24,9 +24,9 @@ namespace Plugin_DMMa {
 #elif MACHA //マダム
 namespace Plugin_DMMm {
     public class Plugin_DMMm : ISitePlugin {
-#elif WACHA //ワールド
-namespace Plugin_DMMw {
-    public class Plugin_DMMw : ISitePlugin {
+#elif VIRTUAL //バーチャル
+namespace Plugin_DMMv {
+    public class Plugin_DMMv : ISitePlugin {
 #else //おしゃべり
 namespace Plugin_DMMo {
     public class Plugin_DMMo : ISitePlugin {
@@ -46,6 +46,21 @@ namespace Plugin_DMMo {
                     this.MinimumSize = this.Size;
                 }
                 base.OnSizeChanged(e);
+            }
+        }
+
+        private class WebClientEx : WebClient {
+            public CookieContainer cookieContainer = new CookieContainer();
+            public int timeout = 30000;
+            protected override WebRequest GetWebRequest(Uri address) {
+                WebRequest wr = base.GetWebRequest(address);
+                HttpWebRequest hwr = wr as HttpWebRequest;
+                if (hwr != null) {
+                    hwr.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate; //圧縮を有効化
+                    hwr.CookieContainer = cookieContainer; //Cookie
+                    hwr.Timeout = timeout;
+                }
+                return wr;
             }
         }
 
@@ -125,13 +140,14 @@ namespace Plugin_DMMo {
         private readonly string SFile = "DMM_FixSize.txt";
         private static bool IsFormFixedSize = false;
 
+        private CookieContainer dmm_cookie = null;
 
 #if ACHA //アダルト
         private readonly string sRoomName = "acha";
 #elif MACHA //マダム
         private readonly string sRoomName = "macha";
-#elif WACHA //ワールド
-        private readonly string sRoomName = "wacha";
+#elif VIRTUAL //バーチャル
+        private readonly string sRoomName = "virtual";
 #else //おしゃべり
         private readonly string sRoomName = "ocha";
 #endif
@@ -145,7 +161,7 @@ namespace Plugin_DMMo {
 #else
         public string Site       { get { return "DMM(" + sRoomName[0] + ")"; } }
 #endif
-        public string Caption    { get { return Site + "用のプラグイン(2019/11/06版)"; } }
+        public string Caption    { get { return Site + "用のプラグイン(2022/05/06版)"; } }
 
         public string TopPageUrl { get { return "https://www.dmm.co.jp/live/chat/"; } }
 
@@ -172,14 +188,25 @@ namespace Plugin_DMMo {
             //オンラインパフォーマーリスト生成
             List<Performer> pefs = new List<Performer>();
 
+            //年齢確認
+            if (dmm_cookie == null) {
+                using (WebClientEx wc = new WebClientEx()) {
+                    wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
+                    wc.Encoding = Encoding.UTF8;
+                    string resData = wc.DownloadString("https://www.dmm.co.jp/age_check/=/declared=yes/?rurl=http%3A%2F%2Fwww.dmm.co.jp%2Flive%2Fchat%2F");
+                    dmm_cookie = wc.cookieContainer;
+                }
+            }
+
             //リストページの読み込みと木構造への変換
             List<HtmlItem> tagTops = new List<HtmlItem>();
             foreach (string sUrl in sUrlList) {
                 try {
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
-                    using (WebClient wc = new WebClient()) {
+                    using (WebClientEx wc = new WebClientEx()) {
                         wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
                         wc.Encoding = Encoding.UTF8;
+                        wc.cookieContainer = dmm_cookie;
                         string resData = wc.DownloadString(TopPageUrl + "-/online-list/"+ sUrl.Replace("%%ROOMNAME%%", sRoomName));
                         Parser.LoadHtml(resData);
                         Parser.ParseTree();
@@ -307,9 +334,10 @@ namespace Plugin_DMMo {
             string sFlash = null;
             try {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)0x00000C00 | (SecurityProtocolType)0x00000300;
-                using (WebClient wc = new WebClient()) {
+                using (WebClientEx wc = new WebClientEx()) {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, Pub.UserAgent + "_" + Site);
                     wc.Encoding = System.Text.Encoding.UTF8;
+                    wc.cookieContainer = dmm_cookie;
                     string sDlUrl = TopPageUrl + "-/chat_room/=/character_id=" + performer.ID + "/";
                     if (performer.RoomName == "event" && RegexGetEv.IsMatch(performer.OtherInfo)) //イベントでイベントIDがある場合
                         sDlUrl = TopPageUrl + "-/event_room/=/character_id=" + performer.ID + "/" + performer.OtherInfo + "/";
